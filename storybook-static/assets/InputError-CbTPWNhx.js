@@ -1,0 +1,1 @@
+import{c as t,t as s,a,o as r}from"./vue.esm-bundler-BtlEUpW_.js";const o={key:0,class:"mt-1 text-sm text-red-600"},p={__name:"InputError",props:{message:{type:String}},setup(e){return(c,m)=>e.message?(r(),t("p",o,s(e.message),1)):a("",!0)}};export{p as _};

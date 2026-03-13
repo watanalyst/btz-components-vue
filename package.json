@@ -1,0 +1,37 @@
+{
+  "name": "btz-components-vue",
+  "version": "2.0.0",
+  "description": "Design system compartilhado — layouts, modais, componentes base",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./tailwind-preset": "./tailwind.preset.js",
+    "./css/base.css": "./css/base.css",
+    "./components/*": "./components/*"
+  },
+  "peerDependencies": {
+    "@heroicons/vue": ">=2.0.0",
+    "vue": ">=3.4.0"
+  },
+  "devDependencies": {
+    "@heroicons/vue": "^2.2.0",
+    "@storybook/addon-essentials": "8.6.18",
+    "@storybook/addon-interactions": "8.6.18",
+    "@storybook/addon-onboarding": "8.6.18",
+    "@storybook/blocks": "8.6.18",
+    "@storybook/test": "8.6.18",
+    "@storybook/vue3": "8.6.18",
+    "@storybook/vue3-vite": "8.6.18",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "storybook": "8.6.18",
+    "tailwindcss": "^3.4.19",
+    "vue": "^3.5.30"
+  },
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  }
+}
