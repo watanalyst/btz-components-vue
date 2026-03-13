@@ -5,7 +5,7 @@ const jaguaTheme = create({
   base: 'light',
 
   // Brand
-  brandTitle: 'btz-components-vue — Design System',
+  brandTitle: '<span style="display:block;font-size:14px;font-weight:700">BTZ Components</span><span style="display:block;font-size:11px;font-weight:400;opacity:0.7">Design System</span>',
   brandUrl: '#',
   brandTarget: '_self',
 
