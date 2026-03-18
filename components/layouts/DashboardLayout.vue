@@ -42,12 +42,22 @@ function isActive(item) {
   return props.currentPath === item.href || props.currentPath.startsWith(item.href + '/')
 }
 
+function hasActiveChild(item) {
+  if (!item.children) return isActive(item)
+  return item.children.some(child => isActive(child))
+}
+
+function hasActiveInSection(section) {
+  return section.items.some(item => hasActiveChild(item))
+}
+
 function isHomePath() {
   return props.currentPath === props.homeHref || props.currentPath === props.homeHref + '/'
 }
 
-// --- Section collapse state ---
+// --- Section & subgroup collapse state ---
 const SECTIONS_KEY = 'sidebarSections'
+const SUBGROUPS_KEY = 'sidebarSubgroups'
 
 function loadSectionState() {
   try { return JSON.parse(localStorage.getItem(SECTIONS_KEY)) || {} }
@@ -58,13 +68,37 @@ function saveSectionState() {
   localStorage.setItem(SECTIONS_KEY, JSON.stringify({ ...sectionExpanded }))
 }
 
+function loadSubgroupState() {
+  try { return JSON.parse(localStorage.getItem(SUBGROUPS_KEY)) || {} }
+  catch { return {} }
+}
+
+function saveSubgroupState() {
+  localStorage.setItem(SUBGROUPS_KEY, JSON.stringify({ ...subgroupExpanded }))
+}
+
 const sectionExpanded = reactive((() => {
   const saved = loadSectionState()
   const state = {}
   for (const section of props.navigation) {
     const key = section.key || section.title
-    const hasActive = section.items.some(item => isActive(item))
-    state[key] = hasActive ? true : (key in saved ? saved[key] : false)
+    const active = hasActiveInSection(section)
+    state[key] = active ? true : (key in saved ? saved[key] : false)
+  }
+  return state
+})())
+
+const subgroupExpanded = reactive((() => {
+  const saved = loadSubgroupState()
+  const state = {}
+  for (const section of props.navigation) {
+    for (const item of section.items) {
+      if (item.children) {
+        const key = item.key || item.label
+        const active = item.children.some(child => isActive(child))
+        state[key] = active ? true : (key in saved ? saved[key] : false)
+      }
+    }
   }
   return state
 })())
@@ -74,12 +108,26 @@ function toggleSection(key) {
   saveSectionState()
 }
 
+function toggleSubgroup(key) {
+  subgroupExpanded[key] = !subgroupExpanded[key]
+  saveSubgroupState()
+}
+
 watch(() => props.currentPath, () => {
   for (const section of props.navigation) {
     const key = section.key || section.title
-    if (section.items.some(item => isActive(item))) {
+    if (hasActiveInSection(section)) {
       sectionExpanded[key] = true
       saveSectionState()
+    }
+    for (const item of section.items) {
+      if (item.children) {
+        const subKey = item.key || item.label
+        if (item.children.some(child => isActive(child))) {
+          subgroupExpanded[subKey] = true
+          saveSubgroupState()
+        }
+      }
     }
   }
 })
@@ -241,42 +289,120 @@ onBeforeUnmount(() => {
             >
               <div :class="sidebarOpen ? 'overflow-hidden' : ''">
                 <div :class="sidebarOpen ? 'space-y-0.5 mb-2' : 'space-y-1'">
-                  <component
-                    :is="linkComponent"
-                    v-for="item in section.items"
-                    :key="item.href || item.label"
-                    :href="item.href"
-                    class="group relative flex items-center text-[13px] font-medium transition-all duration-200"
-                    :class="[
-                      sidebarOpen
-                        ? 'gap-2.5 py-2 px-4 rounded-lg'
-                        : 'justify-center py-2.5 rounded-lg',
-                      isActive(item)
-                        ? 'nav-item-active text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_1px_3px_rgba(0,0,0,0.2)] border border-white/[0.08]'
-                        : 'nav-item text-white/70 border border-white/[0.06]'
-                    ]"
-                  >
-                    <!-- Active indicator -->
-                    <div
-                      v-if="isActive(item)"
-                      class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full shadow-[0_0_8px_rgba(21,101,192,0.6)]"
-                      style="background: #1565C0"
-                    />
+                  <template v-for="item in section.items" :key="item.href || item.key || item.label">
 
-                    <component :is="item.icon || DocumentTextIcon" class="flex-shrink-0" :class="sidebarOpen ? 'h-[18px] w-[18px]' : 'h-5 w-5'" />
+                    <!-- Subgroup (item with children) -->
+                    <template v-if="item.children">
+                      <!-- Subgroup toggle (expanded sidebar) -->
+                      <button
+                        v-if="sidebarOpen"
+                        type="button"
+                        @click="toggleSubgroup(item.key || item.label)"
+                        class="group relative flex w-full items-center gap-2.5 rounded-lg px-4 py-2
+                               text-[13px] font-semibold transition-all duration-200
+                               nav-subgroup focus:outline-none border border-white/[0.06]"
+                        :class="hasActiveChild(item)
+                          ? 'text-white border-white/[0.08]'
+                          : 'text-white/70 hover:text-white'"
+                      >
+                        <component :is="item.icon || FolderIcon" class="h-[18px] w-[18px] flex-shrink-0" />
+                        <span class="flex-1 text-left truncate">{{ item.label }}</span>
+                        <ChevronRightIcon
+                          class="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200"
+                          :class="subgroupExpanded[item.key || item.label] ? 'rotate-90' : ''"
+                        />
+                      </button>
 
-                    <!-- Label (expanded) -->
-                    <span v-if="sidebarOpen" class="truncate">{{ item.label }}</span>
+                      <!-- Subgroup toggle (collapsed sidebar — shows as folder tooltip) -->
+                      <button
+                        v-else
+                        type="button"
+                        @click="toggleSubgroup(item.key || item.label)"
+                        class="group relative flex w-full items-center justify-center rounded-lg py-2.5 text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200 focus:outline-none"
+                      >
+                        <FolderIcon class="h-5 w-5 flex-shrink-0" />
+                        <span
+                          class="absolute left-full ml-3 whitespace-nowrap text-white text-xs py-1.5 px-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 pointer-events-none"
+                          style="background: #0A1E44"
+                        >
+                          {{ item.label }}
+                        </span>
+                      </button>
 
-                    <!-- Tooltip (collapsed) -->
-                    <span
+                      <!-- Subgroup children -->
+                      <div
+                        class="grid transition-[grid-template-rows] duration-200 ease-out"
+                        :style="{ gridTemplateRows: (!sidebarOpen || subgroupExpanded[item.key || item.label]) ? '1fr' : '0fr' }"
+                      >
+                        <div :class="sidebarOpen ? 'overflow-hidden' : ''">
+                          <div :class="sidebarOpen ? 'space-y-0.5 ml-3' : 'space-y-1'">
+                            <component
+                              :is="linkComponent"
+                              v-for="child in item.children"
+                              :key="child.href || child.label"
+                              :href="child.href"
+                              class="group relative flex items-center text-[13px] font-medium transition-all duration-200"
+                              :class="[
+                                sidebarOpen
+                                  ? 'gap-2.5 py-2 px-4 rounded-lg'
+                                  : 'justify-center py-2.5 rounded-lg',
+                                isActive(child)
+                                  ? 'nav-child-active text-white border border-white/[0.08]'
+                                  : 'nav-child text-white/75 border border-transparent hover:text-white'
+                              ]"
+                            >
+                              <div
+                                v-if="isActive(child)"
+                                class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full shadow-[0_0_8px_rgba(21,101,192,0.6)]"
+                                style="background: #1565C0"
+                              />
+                              <component :is="child.icon || DocumentTextIcon" class="flex-shrink-0" :class="sidebarOpen ? 'h-[18px] w-[18px]' : 'h-5 w-5'" />
+                              <span v-if="sidebarOpen" class="truncate">{{ child.label }}</span>
+                              <span
+                                v-else
+                                class="absolute left-full ml-3 whitespace-nowrap text-white text-xs py-1.5 px-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 pointer-events-none"
+                                style="background: #0A1E44"
+                              >
+                                {{ child.label }}
+                              </span>
+                            </component>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- Regular item (no children) -->
+                    <component
                       v-else
-                      class="absolute left-full ml-3 whitespace-nowrap text-white text-xs py-1.5 px-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 pointer-events-none"
-                      style="background: #0A1E44"
+                      :is="linkComponent"
+                      :href="item.href"
+                      class="group relative flex items-center text-[13px] font-medium transition-all duration-200"
+                      :class="[
+                        sidebarOpen
+                          ? 'gap-2.5 py-2 px-4 rounded-lg'
+                          : 'justify-center py-2.5 rounded-lg',
+                        isActive(item)
+                          ? 'nav-item-active text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_1px_3px_rgba(0,0,0,0.2)] border border-white/[0.08]'
+                          : 'nav-item text-white/70 border border-white/[0.06]'
+                      ]"
                     >
-                      {{ item.label }}
-                    </span>
-                  </component>
+                      <div
+                        v-if="isActive(item)"
+                        class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full shadow-[0_0_8px_rgba(21,101,192,0.6)]"
+                        style="background: #1565C0"
+                      />
+                      <component :is="item.icon || DocumentTextIcon" class="flex-shrink-0" :class="sidebarOpen ? 'h-[18px] w-[18px]' : 'h-5 w-5'" />
+                      <span v-if="sidebarOpen" class="truncate">{{ item.label }}</span>
+                      <span
+                        v-else
+                        class="absolute left-full ml-3 whitespace-nowrap text-white text-xs py-1.5 px-3 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 pointer-events-none"
+                        style="background: #0A1E44"
+                      >
+                        {{ item.label }}
+                      </span>
+                    </component>
+
+                  </template>
                 </div>
               </div>
             </div>
@@ -400,15 +526,37 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Level 2 — items diretos (sem subgrupo) */
 .nav-item {
-  background: linear-gradient(to right, rgba(9,63,135,0.18), rgba(7,52,112,0.3));
+  background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
 }
 .nav-item:hover {
-  background: linear-gradient(to right, rgba(9,63,135,0.3), rgba(7,52,112,0.45));
+  background: linear-gradient(to right, rgba(255,255,255,0.12), rgba(255,255,255,0.07));
   border-color: rgba(255,255,255,0.1);
   color: #fff;
 }
 .nav-item-active {
-  background: linear-gradient(to right, rgba(9,63,135,0.35), rgba(7,52,112,0.55));
+  background: linear-gradient(to right, rgba(255,255,255,0.12), rgba(255,255,255,0.07));
+}
+
+/* Level 2 — subgrupo (toggle) */
+.nav-subgroup {
+  background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+}
+.nav-subgroup:hover {
+  background: linear-gradient(to right, rgba(255,255,255,0.12), rgba(255,255,255,0.07));
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* Level 3 — relatórios (children) */
+.nav-child {
+  background: linear-gradient(to right, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+}
+.nav-child:hover {
+  background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
+  color: #fff;
+}
+.nav-child-active {
+  background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
 }
 </style>

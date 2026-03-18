@@ -16,30 +16,69 @@ export default {
   },
 }
 
+// ── Navigation: 2 níveis (flat) — reflete config/reports.php atual ──
 const mockNavigation = [
   {
     key: 'financeiro',
     title: 'Financeiro',
     items: [
-      { label: 'Comissões', href: '/relatorios/comissoes' },
-      { label: 'Faturamento', href: '/relatorios/faturamento' },
-      { label: 'Contas a Receber', href: '/relatorios/contas-receber' },
+      { label: 'Comissão', href: '/relatorios/financeiro/comissao' },
+      { label: 'Comissão Redeconomia', href: '/relatorios/financeiro/comissao-redeconomia' },
+      { label: 'Comissão Representante', href: '/relatorios/financeiro/comissao-representante' },
+      { label: 'Fechamento Câmbio', href: '/relatorios/financeiro/fechamento-cambio' },
     ],
   },
   {
     key: 'exportacao',
     title: 'Exportação',
     items: [
-      { label: 'Embarques', href: '/relatorios/exportacao/embarques' },
-      { label: 'Processos', href: '/relatorios/exportacao/processos' },
+      { label: 'Embarques Exportação', href: '/relatorios/exportacao/embarques' },
+      { label: 'Processos Exportação', href: '/relatorios/exportacao/processos' },
+    ],
+  },
+]
+
+// ── Navigation: 3 níveis (com subgrupos) — reflete jaguareport atual ──
+const mockNavigationNested = [
+  {
+    key: 'financeiro',
+    title: 'Financeiro',
+    items: [
+      {
+        label: 'Contas a Receber',
+        key: 'contas-receber',
+        children: [
+          { label: 'Comissão', href: '/relatorios/financeiro/comissao' },
+          { label: 'Comissão Redeconomia', href: '/relatorios/financeiro/comissao-redeconomia' },
+          { label: 'Comissão Representante', href: '/relatorios/financeiro/comissao-representante' },
+          { label: 'Fechamento Câmbio', href: '/relatorios/financeiro/fechamento-cambio' },
+        ],
+      },
     ],
   },
   {
-    key: 'comercial',
-    title: 'Comercial',
+    key: 'exportacao',
+    title: 'Exportação',
     items: [
-      { label: 'Vendas por Região', href: '/relatorios/vendas-regiao' },
-      { label: 'Metas', href: '/relatorios/metas' },
+      {
+        label: 'Processo',
+        key: 'processo',
+        children: [
+          { label: 'Embarques Exportação', href: '/relatorios/exportacao/embarques' },
+          { label: 'Processos Exportação', href: '/relatorios/exportacao/processos' },
+          { label: 'Packing List', href: '/relatorios/exportacao/packing-list' },
+        ],
+      },
+      {
+        label: 'Financeiro',
+        key: 'financeiro-exp',
+        children: [
+          { label: 'Comissão Exportação', href: '/relatorios/exportacao/comissao-exportacao' },
+          { label: 'Credit Note', href: '/relatorios/exportacao/credit-note' },
+          { label: 'Debit Note', href: '/relatorios/exportacao/debit-note' },
+          { label: 'Baixa Disponível', href: '/relatorios/exportacao/baixa-disponivel' },
+        ],
+      },
     ],
   },
 ]
@@ -48,6 +87,8 @@ const mockUser = {
   name: 'Weslley Tena',
   subtitle: 'TI',
 }
+
+// ── Stories ──
 
 export const Default = () => ({
   components: { DashboardLayout },
@@ -73,9 +114,46 @@ export const Default = () => ({
       </template>
 
       <div class="rounded-xl bg-white p-6 shadow-sm">
-        <h2 class="text-base font-semibold text-gray-800 mb-4">Conteúdo da Página</h2>
+        <h2 class="text-base font-semibold text-gray-800 mb-4">Navegação 2 Níveis</h2>
         <p class="text-sm text-gray-600">
-          Este é o conteúdo principal da página, renderizado dentro do slot padrão do DashboardLayout.
+          Estrutura atual: Seção → Itens (links diretos).
+        </p>
+      </div>
+    </DashboardLayout>
+  `,
+})
+
+export const NestedSubgroups = () => ({
+  components: { DashboardLayout },
+  setup() {
+    return {
+      navigation: mockNavigationNested,
+      user: mockUser,
+    }
+  },
+  template: `
+    <DashboardLayout
+      app-name="Jagua"
+      app-name-highlight="Report"
+      :navigation="navigation"
+      :user="user"
+      version="v2.0.0"
+      current-path="/relatorios/financeiro/comissao"
+      home-href="/"
+      @logout="() => alert('Logout clicked')"
+    >
+      <template #header>
+        <h1 class="text-lg font-semibold text-gray-800">Comissão</h1>
+      </template>
+
+      <div class="rounded-xl bg-white p-6 shadow-sm">
+        <h2 class="text-base font-semibold text-gray-800 mb-4">Navegação 3 Níveis (Subgrupos)</h2>
+        <p class="text-sm text-gray-600">
+          Estrutura com subgrupos: Seção → Subgrupo → Itens.<br>
+          Compatível com a estrutura do Scriptcase (ex: Administrativo → Fomento → Relatórios).
+        </p>
+        <p class="text-sm text-gray-500 mt-2">
+          Itens sem <code>children</code> continuam como links diretos (veja Exportação).
         </p>
       </div>
     </DashboardLayout>
