@@ -17,6 +17,8 @@ const props = defineProps({
   pageSize: { type: Number, default: 25 },
   exportFilename: { type: String, default: 'relatorio' },
   selectable: { type: Boolean, default: false },
+  groupBy: { type: Array, default: () => [] },
+  sumColumns: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['update:selected'])
@@ -414,6 +416,113 @@ function exportExcel() {
   XLSX.writeFile(wb, `${props.exportFilename}_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
+// ── Grouping (quebra) ──
+const groupingActive = ref(props.groupBy.length > 0)
+const hasGrouping = computed(() => props.groupBy.length > 0)
+
+watch(groupingActive, () => { currentPage.value = 1 })
+
+const groupedDisplayData = computed(() => {
+  if (!groupingActive.value || !hasGrouping.value) return null
+
+  const data = sortedData.value
+  if (!data.length) return null
+
+  const rows = []
+  const groupKeys = props.groupBy
+  const sumCols = props.sumColumns
+
+  // Sort data by group keys first
+  const sorted = [...data].sort((a, b) => {
+    for (const key of groupKeys) {
+      const va = a[key] ?? ''
+      const vb = b[key] ?? ''
+      const cmp = String(va).localeCompare(String(vb), 'pt-BR', { sensitivity: 'base' })
+      if (cmp !== 0) return cmp
+    }
+    return 0
+  })
+
+  // Build grouped rows with subtotals
+  let currentGroup = null
+  let currentGV = {}
+  let groupSums = {}
+  let grandTotals = {}
+
+  // Init grand totals
+  sumCols.forEach(k => { grandTotals[k] = 0 })
+
+  for (const row of sorted) {
+    const groupKey = groupKeys.map(k => row[k] ?? '').join('|')
+
+    if (currentGroup !== groupKey) {
+      // Emit subtotal for previous group
+      if (currentGroup !== null) {
+        rows.push({ _type: 'subtotal', _groupValues: { ...currentGV }, _sums: { ...groupSums } })
+      }
+
+      // Start new group
+      currentGroup = groupKey
+      currentGV = groupKeys.reduce((o, k) => { o[k] = row[k]; return o }, {})
+      groupSums = {}
+      sumCols.forEach(k => { groupSums[k] = 0 })
+    }
+
+    // Data row
+    rows.push({ _type: 'data', ...row })
+
+    // Accumulate sums
+    sumCols.forEach(k => {
+      groupSums[k] += parseFloat(row[k]) || 0
+      grandTotals[k] += parseFloat(row[k]) || 0
+    })
+  }
+
+  // Last group subtotal
+  if (currentGroup !== null) {
+    rows.push({ _type: 'subtotal', _groupValues: { ...currentGV }, _sums: { ...groupSums } })
+  }
+
+  // Grand total
+  rows.push({ _type: 'grand_total', _sums: grandTotals })
+
+  return rows
+})
+
+// Paginated grouped data
+const paginatedGroupedData = computed(() => {
+  if (!groupedDisplayData.value) return null
+  const start = (currentPage.value - 1) * perPage.value
+  return groupedDisplayData.value.slice(start, start + perPage.value)
+})
+
+const totalGroupedPages = computed(() => {
+  if (!groupedDisplayData.value) return 1
+  return Math.max(1, Math.ceil(groupedDisplayData.value.length / perPage.value))
+})
+
+const activeTotalPages = computed(() =>
+  groupingActive.value && groupedDisplayData.value
+    ? totalGroupedPages.value
+    : totalPages.value
+)
+
+const activeVisiblePages = computed(() => {
+  const pages = []
+  const total = activeTotalPages.value
+  const cur = currentPage.value
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (cur > 3) pages.push('...')
+    for (let i = Math.max(2, cur - 1); i <= Math.min(total - 1, cur + 1); i++) pages.push(i)
+    if (cur < total - 2) pages.push('...')
+    pages.push(total)
+  }
+  return pages
+})
+
 // Filters
 const hasActiveFilters = computed(() =>
   Object.values(columnFilters.value).some(v => v !== '')
@@ -426,7 +535,7 @@ function clearFilters() {
 }
 
 function goToPage(p) {
-  if (typeof p === 'number' && p >= 1 && p <= totalPages.value) {
+  if (typeof p === 'number' && p >= 1 && p <= activeTotalPages.value) {
     currentPage.value = p
   }
 }
@@ -462,6 +571,11 @@ function goToPage(p) {
           <span>Limpar</span>
         </SecondaryButton>
 
+        <SecondaryButton v-if="hasGrouping" type="button" @click="groupingActive = !groupingActive">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /></svg>
+          <span>{{ groupingActive ? 'Detalhado' : 'Quebra' }}</span>
+        </SecondaryButton>
+
         <SecondaryButton type="button" @click="openFullscreen" :disabled="!sortedData.length">
           <ArrowsPointingOutIcon class="h-4 w-4" />
           <span>Expandir</span>
@@ -495,6 +609,7 @@ function goToPage(p) {
                 cellAlign(col),
                 col.sortable ? 'cursor-pointer hover:bg-white/10 transition-colors' : '',
               ]"
+              :style="col.width ? { width: col.width } : {}"
               @click="toggleSort(col.key)"
             >
               <span class="inline-flex items-center gap-1.5">
@@ -522,7 +637,8 @@ function goToPage(p) {
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-gray-100/80">
+        <!-- Normal tbody -->
+        <tbody v-if="!groupingActive || !groupedDisplayData" class="divide-y divide-gray-100/80">
           <tr
             v-for="(row, i) in paginatedData"
             :key="i"
@@ -557,15 +673,75 @@ function goToPage(p) {
             </td>
           </tr>
         </tbody>
+
+        <!-- Grouped tbody -->
+        <tbody v-else class="divide-y divide-gray-100/80">
+          <template v-for="(row, i) in paginatedGroupedData" :key="i">
+            <!-- Data row -->
+            <tr
+              v-if="row._type === 'data'"
+              class="transition-colors duration-150"
+              :class="i % 2 === 0 ? 'bg-white hover:bg-blue-200/70' : 'bg-slate-100/70 hover:bg-blue-200/70'"
+            >
+              <td
+                v-for="col in columns"
+                :key="col.key"
+                class="px-3 py-2.5 whitespace-nowrap text-gray-700"
+                :class="cellAlign(col)"
+              >
+                {{ formatCell(row[col.key], col) }}
+              </td>
+            </tr>
+
+            <!-- Subtotal row -->
+            <tr
+              v-else-if="row._type === 'subtotal'"
+              class="bg-blue-50 font-semibold text-gray-800 border-t-2 border-blue-200"
+            >
+              <td
+                v-for="(col, ci) in columns"
+                :key="col.key"
+                class="px-3 py-2 whitespace-nowrap"
+                :class="cellAlign(col)"
+              >
+                <template v-if="ci === 0">
+                  {{ groupBy.map(k => row._groupValues[k]).join(' / ') }}
+                </template>
+                <template v-else-if="sumColumns.includes(col.key)">
+                  {{ formatCell(row._sums[col.key], col) }}
+                </template>
+              </td>
+            </tr>
+
+            <!-- Grand total row -->
+            <tr
+              v-else-if="row._type === 'grand_total'"
+              class="font-bold text-white"
+              style="background: linear-gradient(180deg, #0B56B3 0%, #093F87 100%);"
+            >
+              <td
+                v-for="(col, ci) in columns"
+                :key="col.key"
+                class="px-3 py-2.5 whitespace-nowrap"
+                :class="cellAlign(col)"
+              >
+                <template v-if="ci === 0">TOTAL GERAL</template>
+                <template v-else-if="sumColumns.includes(col.key)">
+                  {{ formatCell(row._sums[col.key], col) }}
+                </template>
+              </td>
+            </tr>
+          </template>
+        </tbody>
       </table>
 
-      <div v-if="paginatedData.length === 0" class="py-12 text-center text-gray-400 text-sm">
+      <div v-if="(groupingActive && groupedDisplayData ? paginatedGroupedData : paginatedData).length === 0" class="py-12 text-center text-gray-400 text-sm">
         Nenhum registro encontrado.
       </div>
     </div>
 
     <!-- Pagination -->
-    <div v-if="sortedData.length > 0" class="mt-5 flex items-center justify-between">
+    <div v-if="(groupingActive && groupedDisplayData ? groupedDisplayData.length : sortedData.length) > 0" class="mt-5 flex items-center justify-between">
       <div class="inline-flex items-center gap-1.5 text-xs text-gray-500">
         <span>Exibir</span>
         <select
@@ -594,7 +770,7 @@ function goToPage(p) {
           &laquo; Anterior
         </button>
 
-        <template v-for="p in visiblePages" :key="p">
+        <template v-for="p in activeVisiblePages" :key="p">
           <span v-if="p === '...'" class="px-1.5 text-xs text-gray-300">...</span>
           <button
             v-else
@@ -612,10 +788,10 @@ function goToPage(p) {
 
         <button
           type="button"
-          :disabled="currentPage >= totalPages"
+          :disabled="currentPage >= activeTotalPages"
           @click="goToPage(currentPage + 1)"
           class="rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
-          :class="currentPage >= totalPages
+          :class="currentPage >= activeTotalPages
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'"
         >
