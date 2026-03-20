@@ -431,6 +431,7 @@ const groupedDisplayData = computed(() => {
   const rows = []
   const groupKeys = props.groupBy
   const sumCols = props.sumColumns
+  const levels = groupKeys.length
 
   // Sort data by group keys first
   const sorted = [...data].sort((a, b) => {
@@ -443,45 +444,72 @@ const groupedDisplayData = computed(() => {
     return 0
   })
 
-  // Build grouped rows with subtotals
-  let currentGroup = null
-  let currentGV = {}
-  let groupSums = {}
-  let grandTotals = {}
-
-  // Init grand totals
+  // Track current group key at each level and their sums
+  const currentKeys = new Array(levels).fill(null)
+  const levelSums = Array.from({ length: levels }, () => {
+    const s = {}; sumCols.forEach(k => { s[k] = 0 }); return s
+  })
+  const levelValues = Array.from({ length: levels }, () => ({}))
+  const grandTotals = {}
   sumCols.forEach(k => { grandTotals[k] = 0 })
 
-  for (const row of sorted) {
-    const groupKey = groupKeys.map(k => row[k] ?? '').join('|')
-
-    if (currentGroup !== groupKey) {
-      // Emit subtotal for previous group
-      if (currentGroup !== null) {
-        rows.push({ _type: 'subtotal', _groupValues: { ...currentGV }, _sums: { ...groupSums } })
+  function emitSubtotals(fromLevel) {
+    // Emit subtotals from deepest changed level up to fromLevel
+    for (let lv = levels - 1; lv >= fromLevel; lv--) {
+      if (currentKeys[lv] !== null) {
+        const gv = {}
+        for (let j = 0; j <= lv; j++) {
+          Object.assign(gv, levelValues[j])
+        }
+        rows.push({
+          _type: 'subtotal',
+          _level: lv,
+          _groupKeys: groupKeys.slice(0, lv + 1),
+          _groupValues: gv,
+          _sums: { ...levelSums[lv] },
+        })
       }
+    }
+  }
 
-      // Start new group
-      currentGroup = groupKey
-      currentGV = groupKeys.reduce((o, k) => { o[k] = row[k]; return o }, {})
-      groupSums = {}
-      sumCols.forEach(k => { groupSums[k] = 0 })
+  for (const row of sorted) {
+    // Determine which level changed
+    let changedLevel = -1
+    for (let lv = 0; lv < levels; lv++) {
+      const val = String(row[groupKeys[lv]] ?? '')
+      if (val !== currentKeys[lv]) {
+        changedLevel = lv
+        break
+      }
+    }
+
+    if (changedLevel >= 0) {
+      // Emit subtotals for levels that ended
+      emitSubtotals(changedLevel)
+
+      // Reset changed levels and deeper
+      for (let lv = changedLevel; lv < levels; lv++) {
+        currentKeys[lv] = String(row[groupKeys[lv]] ?? '')
+        levelValues[lv] = { [groupKeys[lv]]: row[groupKeys[lv]] }
+        sumCols.forEach(k => { levelSums[lv][k] = 0 })
+      }
     }
 
     // Data row
     rows.push({ _type: 'data', ...row })
 
-    // Accumulate sums
+    // Accumulate sums at every level
     sumCols.forEach(k => {
-      groupSums[k] += parseFloat(row[k]) || 0
-      grandTotals[k] += parseFloat(row[k]) || 0
+      const v = parseFloat(row[k]) || 0
+      for (let lv = 0; lv < levels; lv++) {
+        levelSums[lv][k] += v
+      }
+      grandTotals[k] += v
     })
   }
 
-  // Last group subtotal
-  if (currentGroup !== null) {
-    rows.push({ _type: 'subtotal', _groupValues: { ...currentGV }, _sums: { ...groupSums } })
-  }
+  // Emit remaining subtotals
+  emitSubtotals(0)
 
   // Grand total
   rows.push({ _type: 'grand_total', _sums: grandTotals })
@@ -696,7 +724,12 @@ function goToPage(p) {
             <!-- Subtotal row -->
             <tr
               v-else-if="row._type === 'subtotal'"
-              class="bg-blue-50 font-semibold text-gray-800 border-t-2 border-blue-200"
+              class="font-semibold border-t"
+              :class="[
+                row._level === 0 ? 'bg-amber-100/80 text-gray-900 border-amber-300' :
+                row._level === 1 ? 'bg-yellow-50/80 text-gray-800 border-yellow-200' :
+                'bg-blue-50/60 text-gray-700 border-blue-100'
+              ]"
             >
               <td
                 v-for="(col, ci) in columns"
@@ -705,7 +738,7 @@ function goToPage(p) {
                 :class="cellAlign(col)"
               >
                 <template v-if="ci === 0">
-                  {{ groupBy.map(k => row._groupValues[k]).join(' / ') }}
+                  {{ row._groupKeys.map(k => row._groupValues[k]).join(' / ') }}
                 </template>
                 <template v-else-if="sumColumns.includes(col.key)">
                   {{ formatCell(row._sums[col.key], col) }}
