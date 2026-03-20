@@ -726,8 +726,8 @@ function goToPage(p) {
               v-else-if="row._type === 'subtotal'"
               class="font-semibold border-t"
               :class="[
-                row._level === 0 ? 'bg-amber-100/80 text-gray-900 border-amber-300' :
-                row._level === 1 ? 'bg-yellow-50/80 text-gray-800 border-yellow-200' :
+                row._level === 0 ? 'bg-blue-600/90 text-white border-blue-700' :
+                row._level === 1 ? 'bg-blue-100/80 text-gray-900 border-blue-200' :
                 'bg-blue-50/60 text-gray-700 border-blue-100'
               ]"
             >
