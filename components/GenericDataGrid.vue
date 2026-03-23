@@ -19,9 +19,14 @@ const props = defineProps({
   selectable: { type: Boolean, default: false },
   groupBy: { type: Array, default: () => [] },
   sumColumns: { type: Array, default: () => [] },
+  groupMode: { type: String, default: 'resumo' }, // 'resumo' ou 'quebra'
+  maxHeight: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:selected'])
+
+// Highlight row on click
+const highlightedRow = ref(-1)
 
 // Selection state
 const selectedSet = ref(new Set())
@@ -204,6 +209,14 @@ function cellAlign(col) {
   return 'text-left'
 }
 
+function quebraColWidth(col) {
+  if (col.width) return col.width
+  if (col.type === 'currency') return '120px'
+  if (col.type === 'number') return '80px'
+  if (col.type === 'date') return '110px'
+  return '100px'
+}
+
 // Fullscreen in new tab
 function openFullscreen() {
   const cols = props.columns
@@ -223,7 +236,20 @@ function openFullscreen() {
 <title>${props.exportFilename} — Visualização expandida</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#374151;padding:16px;background:#f3f4f6}
+  body{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#374151;padding:16px;background:#f3f4f6;overflow:auto;scrollbar-width:auto}
+  body::-webkit-scrollbar{width:12px;height:12px}
+  body::-webkit-scrollbar-track{background:#e5e7eb}
+  body::-webkit-scrollbar-thumb{background:#9ca3af}
+  body::-webkit-scrollbar-thumb:hover{background:#6b7280}
+  body::-webkit-scrollbar-corner{background:#e5e7eb}
+  body::-webkit-scrollbar-button:single-button:vertical:decrement{display:block;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M5 0l5 6H0z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  body::-webkit-scrollbar-button:single-button:vertical:decrement:hover{background-color:#d1d5db}
+  body::-webkit-scrollbar-button:single-button:vertical:increment{display:block;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  body::-webkit-scrollbar-button:single-button:vertical:increment:hover{background-color:#d1d5db}
+  body::-webkit-scrollbar-button:single-button:horizontal:decrement{display:block;width:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10'%3E%3Cpath d='M6 0v10L0 5z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  body::-webkit-scrollbar-button:single-button:horizontal:decrement:hover{background-color:#d1d5db}
+  body::-webkit-scrollbar-button:single-button:horizontal:increment{display:block;width:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10'%3E%3Cpath d='M0 0v10l6-5z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  body::-webkit-scrollbar-button:single-button:horizontal:increment:hover{background-color:#d1d5db}
   .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
   .toolbar .left{font-size:13px;color:#6b7280}
   .toolbar .left b{color:#111827;font-weight:600}
@@ -232,8 +258,24 @@ function openFullscreen() {
   .btn:hover{background:#f0f5ff;border-color:#93c5fd;color:#1d4ed8;box-shadow:0 3px 10px rgba(29,78,216,0.12)}
   .btn-excel{background:linear-gradient(135deg,#047857 0%,#059669 100%);color:#fff;border-color:#047857;font-weight:600;box-shadow:0 4px 14px rgba(4,120,87,0.35)}
   .btn-excel:hover{filter:brightness(1.1);box-shadow:0 4px 14px rgba(4,120,87,0.45)}
-  .table-wrap{overflow:hidden;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-  table{width:100%;border-collapse:collapse;background:#fff}
+  .btn-sair{background:linear-gradient(135deg,#DC2626 0%,#B91C1C 100%);color:#fff;border-color:#DC2626;font-weight:600;box-shadow:0 4px 14px rgba(220,38,38,0.35)}
+  .btn-sair:hover{transform:translateY(-1px);filter:brightness(1.1);box-shadow:0 4px 14px rgba(220,38,38,0.45)}
+  .table-wrap{overflow:visible;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+  .table-wrap thead{position:sticky;top:0;z-index:1}
+  .table-wrap::-webkit-scrollbar{width:12px;height:12px}
+  .table-wrap::-webkit-scrollbar-track{background:#e5e7eb}
+  .table-wrap::-webkit-scrollbar-thumb{background:#9ca3af}
+  .table-wrap::-webkit-scrollbar-thumb:hover{background:#6b7280}
+  .table-wrap::-webkit-scrollbar-corner{background:#e5e7eb}
+  .table-wrap::-webkit-scrollbar-button:single-button:vertical:decrement{display:block;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M5 0l5 6H0z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  .table-wrap::-webkit-scrollbar-button:single-button:vertical:decrement:hover{background-color:#d1d5db}
+  .table-wrap::-webkit-scrollbar-button:single-button:vertical:increment{display:block;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  .table-wrap::-webkit-scrollbar-button:single-button:vertical:increment:hover{background-color:#d1d5db}
+  .table-wrap::-webkit-scrollbar-button:single-button:horizontal:decrement{display:block;width:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10'%3E%3Cpath d='M6 0v10L0 5z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  .table-wrap::-webkit-scrollbar-button:single-button:horizontal:decrement:hover{background-color:#d1d5db}
+  .table-wrap::-webkit-scrollbar-button:single-button:horizontal:increment{display:block;width:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10'%3E%3Cpath d='M0 0v10l6-5z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
+  .table-wrap::-webkit-scrollbar-button:single-button:horizontal:increment:hover{background-color:#d1d5db}
+  table{min-width:100%;border-collapse:collapse;background:#fff;width:max-content}
   thead tr{background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%);color:#fff}
   thead th{padding:10px 12px;white-space:nowrap;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;user-select:none}
   thead th.sortable{cursor:pointer;transition:background .15s}
@@ -262,6 +304,7 @@ function openFullscreen() {
   <div class="right">
     <button class="btn btn-excel" onclick="exportExcel()">Excel</button>
     <button class="btn" onclick="window.print()">Imprimir</button>
+    <button class="btn btn-sair" onclick="window.close()">Sair</button>
   </div>
 </div>
 <div class="table-wrap">
@@ -419,8 +462,24 @@ function exportExcel() {
 // ── Grouping (quebra) ──
 const groupingActive = ref(props.groupBy.length > 0)
 const hasGrouping = computed(() => props.groupBy.length > 0)
+const collapsedGroups = ref(new Set())
+
+function toggleCollapse(groupId) {
+  const s = new Set(collapsedGroups.value)
+  if (s.has(groupId)) s.delete(groupId)
+  else s.add(groupId)
+  collapsedGroups.value = s
+}
+
+function isCollapsed(groupId) {
+  return collapsedGroups.value.has(groupId)
+}
 
 watch(groupingActive, () => { currentPage.value = 1 })
+watch(() => props.groupBy, (val) => {
+  groupingActive.value = val.length > 0
+  currentPage.value = 1
+}, { deep: true })
 
 const groupedDisplayData = computed(() => {
   if (!groupingActive.value || !hasGrouping.value) return null
@@ -461,12 +520,17 @@ const groupedDisplayData = computed(() => {
         for (let j = 0; j <= lv; j++) {
           Object.assign(gv, levelValues[j])
         }
+        const _ancestorIds = []
+        for (let j = 0; j <= lv; j++) {
+          _ancestorIds.push(groupKeys.slice(0, j + 1).map((k, idx) => gv[k] ?? currentKeys[idx] ?? '').join('|'))
+        }
         rows.push({
           _type: 'subtotal',
           _level: lv,
           _groupKeys: groupKeys.slice(0, lv + 1),
           _groupValues: gv,
           _sums: { ...levelSums[lv] },
+          _ancestorIds,
         })
       }
     }
@@ -483,6 +547,8 @@ const groupedDisplayData = computed(() => {
       }
     }
 
+    const isFirstInGroup = changedLevel >= 0
+
     if (changedLevel >= 0) {
       // Emit subtotals for levels that ended
       emitSubtotals(changedLevel)
@@ -493,10 +559,41 @@ const groupedDisplayData = computed(() => {
         levelValues[lv] = { [groupKeys[lv]]: row[groupKeys[lv]] }
         sumCols.forEach(k => { levelSums[lv][k] = 0 })
       }
+
+      // Emit group headers for each changed level (quebra mode)
+      if (props.groupMode === 'quebra') {
+        for (let lv = changedLevel; lv < levels; lv++) {
+          const groupId = groupKeys.slice(0, lv + 1).map(k => row[k] ?? '').join('|')
+          const parentId = lv > 0 ? groupKeys.slice(0, lv).map(k => row[k] ?? '').join('|') : null
+          rows.push({
+            _type: 'group_header',
+            _level: lv,
+            _key: groupKeys[lv],
+            _label: row[groupKeys[lv]],
+            _groupId: groupId,
+            _parentId: parentId,
+          })
+        }
+        // Emit column header row after deepest group header
+        const colHeaderAncestors = []
+        for (let lv = 0; lv < levels; lv++) {
+          colHeaderAncestors.push(groupKeys.slice(0, lv + 1).map(k => row[k] ?? '').join('|'))
+        }
+        rows.push({
+          _type: 'column_header',
+          _ancestorIds: colHeaderAncestors,
+        })
+      }
     }
 
-    // Data row
-    rows.push({ _type: 'data', ...row })
+    // Build ancestor group IDs for this data row
+    const _ancestorIds = []
+    for (let lv = 0; lv < levels; lv++) {
+      _ancestorIds.push(groupKeys.slice(0, lv + 1).map(k => row[k] ?? '').join('|'))
+    }
+
+    // Data row — mark first row of group
+    rows.push({ _type: 'data', _firstInGroup: isFirstInGroup, _ancestorIds, ...row })
 
     // Accumulate sums at every level
     sumCols.forEach(k => {
@@ -517,16 +614,44 @@ const groupedDisplayData = computed(() => {
   return rows
 })
 
+// Filter out collapsed rows
+const visibleGroupedData = computed(() => {
+  if (!groupedDisplayData.value) return null
+  if (!collapsedGroups.value.size) return groupedDisplayData.value
+
+  return groupedDisplayData.value.filter(row => {
+    if (row._type === 'grand_total') return true
+    if (row._type === 'group_header') {
+      if (!row._parentId) return true
+      // Hide if any ancestor group is collapsed
+      // Check all ancestor levels, not just parent
+      const parts = row._groupId.split('|')
+      for (let len = 1; len < parts.length; len++) {
+        const ancestorId = parts.slice(0, len).join('|')
+        if (collapsedGroups.value.has(ancestorId)) return false
+      }
+      return true
+    }
+    // Data, subtotal, column_header rows: hide if any ancestor is collapsed
+    if (row._ancestorIds) {
+      return !row._ancestorIds.some(id => collapsedGroups.value.has(id))
+    }
+    return true
+  })
+})
+
 // Paginated grouped data
 const paginatedGroupedData = computed(() => {
-  if (!groupedDisplayData.value) return null
+  const data = visibleGroupedData.value
+  if (!data) return null
   const start = (currentPage.value - 1) * perPage.value
-  return groupedDisplayData.value.slice(start, start + perPage.value)
+  return data.slice(start, start + perPage.value)
 })
 
 const totalGroupedPages = computed(() => {
-  if (!groupedDisplayData.value) return 1
-  return Math.max(1, Math.ceil(groupedDisplayData.value.length / perPage.value))
+  const data = visibleGroupedData.value
+  if (!data) return 1
+  return Math.max(1, Math.ceil(data.length / perPage.value))
 })
 
 const activeTotalPages = computed(() =>
@@ -601,7 +726,7 @@ function goToPage(p) {
 
         <SecondaryButton v-if="hasGrouping" type="button" @click="groupingActive = !groupingActive">
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /></svg>
-          <span>{{ groupingActive ? 'Detalhado' : 'Quebra' }}</span>
+          <span>{{ groupingActive ? 'Detalhado' : (groupMode === 'quebra' ? 'Quebra' : 'Resumo') }}</span>
         </SecondaryButton>
 
         <SecondaryButton type="button" @click="openFullscreen" :disabled="!sortedData.length">
@@ -617,9 +742,9 @@ function goToPage(p) {
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+    <div class="grid-table-container overflow-auto rounded-xl border border-gray-200 shadow-sm" :style="maxHeight ? { maxHeight } : {}">
       <table class="min-w-full text-xs">
-        <thead>
+        <thead v-if="!(groupingActive && groupMode === 'quebra')" class="sticky top-0 z-10">
           <tr style="background: linear-gradient(180deg, #0B56B3 0%, #093F87 100%);" class="text-white">
             <th v-if="selectable" class="px-3 py-3 w-10 text-center">
               <input
@@ -651,7 +776,7 @@ function goToPage(p) {
             </th>
           </tr>
 
-          <tr v-if="showFilters" class="bg-gray-50 border-b border-gray-200">
+          <tr v-if="showFilters" class="bg-gray-50 border-b border-gray-200 sticky top-[38px] z-10">
             <th v-if="selectable" class="px-1.5 py-1.5"></th>
             <th v-for="col in columns" :key="'f-' + col.key" class="px-1.5 py-1.5">
               <input
@@ -674,12 +799,14 @@ function goToPage(p) {
             :class="[
               selectable && isRowSelected(i)
                 ? 'bg-blue-50/80 hover:bg-blue-200/60 ring-inset ring-1 ring-blue-200/50'
-                : i % 2 === 0
-                  ? 'bg-white hover:bg-blue-200/70'
-                  : 'bg-slate-100/70 hover:bg-blue-200/70',
-              selectable ? 'cursor-pointer' : '',
+                : highlightedRow === i
+                  ? 'bg-blue-100 ring-inset ring-1 ring-blue-300'
+                  : i % 2 === 0
+                    ? 'bg-white hover:bg-blue-200/70'
+                    : 'bg-slate-100/70 hover:bg-blue-200/70',
+              'cursor-pointer',
             ]"
-            @click="selectable && toggleRow(i)"
+            @click="selectable ? toggleRow(i) : (highlightedRow = highlightedRow === i ? -1 : i)"
           >
             <td v-if="selectable" class="px-3 py-2.5 text-center" @click.stop>
               <input
@@ -702,20 +829,31 @@ function goToPage(p) {
           </tr>
         </tbody>
 
-        <!-- Grouped tbody -->
-        <tbody v-else class="divide-y divide-gray-100/80">
+        <!-- Grouped tbody (resumo mode) -->
+        <tbody v-else-if="groupMode !== 'quebra'" class="divide-y divide-gray-100/80">
           <template v-for="(row, i) in paginatedGroupedData" :key="i">
             <!-- Data row -->
             <tr
               v-if="row._type === 'data'"
-              class="transition-colors duration-150"
-              :class="i % 2 === 0 ? 'bg-white hover:bg-blue-200/70' : 'bg-slate-100/70 hover:bg-blue-200/70'"
+              class="transition-colors duration-150 cursor-pointer"
+              :class="[
+                highlightedRow === i
+                  ? 'bg-blue-100 ring-inset ring-1 ring-blue-300'
+                  : i % 2 === 0 ? 'bg-white hover:bg-blue-200/70' : 'bg-slate-100/70 hover:bg-blue-200/70',
+                row._firstInGroup ? 'border-t-2 border-blue-200' : '',
+              ]"
+              @click="highlightedRow = highlightedRow === i ? -1 : i"
             >
               <td
                 v-for="col in columns"
                 :key="col.key"
-                class="px-3 py-2.5 whitespace-nowrap text-gray-700"
-                :class="cellAlign(col)"
+                class="px-3 py-2 whitespace-nowrap"
+                :class="[
+                  cellAlign(col),
+                  groupBy.includes(col.key)
+                    ? row._firstInGroup ? 'text-blue-700 font-semibold' : 'text-transparent'
+                    : 'text-gray-700',
+                ]"
               >
                 {{ formatCell(row[col.key], col) }}
               </td>
@@ -724,21 +862,28 @@ function goToPage(p) {
             <!-- Subtotal row -->
             <tr
               v-else-if="row._type === 'subtotal'"
-              class="font-semibold border-t"
+              class="border-t"
               :class="[
-                row._level === 0 ? 'bg-blue-600/90 text-white border-blue-700' :
-                row._level === 1 ? 'bg-blue-100/80 text-gray-900 border-blue-200' :
-                'bg-blue-50/60 text-gray-700 border-blue-100'
+                row._level === 0
+                  ? 'bg-blue-600/90 text-white font-bold border-blue-700'
+                  : row._level === 1
+                    ? 'bg-blue-200/80 text-gray-900 font-semibold border-blue-300'
+                    : 'bg-blue-50 text-gray-700 font-medium border-blue-100'
               ]"
             >
               <td
-                v-for="(col, ci) in columns"
+                v-for="col in columns"
                 :key="col.key"
                 class="px-3 py-2 whitespace-nowrap"
                 :class="cellAlign(col)"
               >
-                <template v-if="ci === 0">
-                  {{ row._groupKeys.map(k => row._groupValues[k]).join(' / ') }}
+                <template v-if="row._groupKeys.includes(col.key)">
+                  <template v-if="row._groupKeys[0] === col.key">
+                    {{ formatCell(row._groupValues[col.key], col) }} Subtotal
+                  </template>
+                  <template v-else>
+                    {{ formatCell(row._groupValues[col.key], col) }}
+                  </template>
                 </template>
                 <template v-else-if="sumColumns.includes(col.key)">
                   {{ formatCell(row._sums[col.key], col) }}
@@ -749,13 +894,13 @@ function goToPage(p) {
             <!-- Grand total row -->
             <tr
               v-else-if="row._type === 'grand_total'"
-              class="font-bold text-white"
+              class="font-bold text-white border-t-2 border-navy-800"
               style="background: linear-gradient(180deg, #0B56B3 0%, #093F87 100%);"
             >
               <td
                 v-for="(col, ci) in columns"
                 :key="col.key"
-                class="px-3 py-2.5 whitespace-nowrap"
+                class="px-3 py-2.5 whitespace-nowrap text-xs"
                 :class="cellAlign(col)"
               >
                 <template v-if="ci === 0">TOTAL GERAL</template>
@@ -767,6 +912,117 @@ function goToPage(p) {
           </template>
         </tbody>
       </table>
+
+      <!-- Quebra mode: indented mini-tables per group -->
+      <div v-if="groupingActive && groupMode === 'quebra' && paginatedGroupedData">
+        <template v-for="(row, i) in paginatedGroupedData" :key="'q-' + i">
+          <!-- Group header -->
+          <div
+            v-if="row._type === 'group_header'"
+            class="cursor-pointer hover:bg-slate-100 transition-colors py-2 text-xs font-semibold text-slate-600 border-t border-slate-100"
+            :style="{ paddingLeft: (row._level * 24 + 12) + 'px' }"
+            @click="toggleCollapse(row._groupId)"
+          >
+            <svg
+              class="inline-block h-3.5 w-3.5 mr-1 text-slate-400 transition-transform duration-200"
+              :class="isCollapsed(row._groupId) ? '' : 'rotate-90'"
+              fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+            <span class="text-slate-400">{{ columns.find(c => c.key === row._key)?.label }}:</span>
+            <span class="ml-1 text-slate-800">{{ columns.find(c => c.key === row._key) ? formatCell(row._label, columns.find(c => c.key === row._key)) : row._label }}</span>
+          </div>
+
+          <!-- Column header -->
+          <div
+            v-else-if="row._type === 'column_header'"
+            class="quebra-row"
+            :style="{ marginLeft: (groupBy.length * 24 + 12) + 'px' }"
+            style="background: linear-gradient(180deg, #0B56B3 0%, #093F87 100%);"
+          >
+            <div
+              v-for="col in columns"
+              :key="'qh-' + col.key"
+              class="quebra-cell px-3 py-2 font-semibold whitespace-nowrap text-[11px] uppercase tracking-wider text-white"
+              :class="cellAlign(col)"
+              :style="{ width: quebraColWidth(col), minWidth: quebraColWidth(col) }"
+            >
+              {{ col.label }}
+            </div>
+          </div>
+
+          <!-- Data row -->
+          <div
+            v-else-if="row._type === 'data'"
+            class="quebra-row cursor-pointer transition-colors duration-150"
+            :class="highlightedRow === i
+              ? 'bg-blue-100'
+              : i % 2 === 0 ? 'bg-white hover:bg-blue-200/70' : 'bg-slate-100/70 hover:bg-blue-200/70'"
+            :style="{ marginLeft: (groupBy.length * 24 + 12) + 'px' }"
+            @click="highlightedRow = highlightedRow === i ? -1 : i"
+          >
+            <div
+              v-for="col in columns"
+              :key="col.key"
+              class="quebra-cell px-3 py-2 whitespace-nowrap text-xs text-gray-700"
+              :class="cellAlign(col)"
+              :style="{ width: quebraColWidth(col), minWidth: quebraColWidth(col) }"
+            >
+              {{ formatCell(row[col.key], col) }}
+            </div>
+          </div>
+
+          <!-- Subtotal row -->
+          <div
+            v-else-if="row._type === 'subtotal'"
+            class="quebra-row border-t text-xs"
+            :class="[
+              row._level === 0
+                ? 'bg-blue-600/90 text-white font-bold border-blue-700'
+                : row._level === 1
+                  ? 'bg-blue-200/80 text-gray-900 font-semibold border-blue-300'
+                  : 'bg-blue-50 text-gray-700 font-medium border-blue-100'
+            ]"
+            :style="{ marginLeft: (groupBy.length * 24 + 12) + 'px' }"
+          >
+            <div
+              v-for="(col, ci) in columns"
+              :key="col.key"
+              class="quebra-cell px-3 py-2 whitespace-nowrap"
+              :class="cellAlign(col)"
+              :style="{ width: quebraColWidth(col), minWidth: quebraColWidth(col) }"
+            >
+              <template v-if="ci === 0">
+                {{ row._level === groupBy.length - 1 ? 'Subtotal' : 'Total' }} {{ columns.find(c => c.key === row._groupKeys[row._level])?.label }}
+              </template>
+              <template v-else-if="sumColumns.includes(col.key)">
+                {{ formatCell(row._sums[col.key], col) }}
+              </template>
+            </div>
+          </div>
+
+          <!-- Grand total -->
+          <div
+            v-else-if="row._type === 'grand_total'"
+            class="quebra-row font-bold text-white text-xs mt-1"
+            style="background: linear-gradient(180deg, #0B56B3 0%, #093F87 100%);"
+          >
+            <div
+              v-for="(col, ci) in columns"
+              :key="col.key"
+              class="quebra-cell px-3 py-2.5 whitespace-nowrap"
+              :class="cellAlign(col)"
+              :style="{ width: quebraColWidth(col), minWidth: quebraColWidth(col) }"
+            >
+              <template v-if="ci === 0">TOTAL GERAL</template>
+              <template v-else-if="sumColumns.includes(col.key)">
+                {{ formatCell(row._sums[col.key], col) }}
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
 
       <div v-if="(groupingActive && groupedDisplayData ? paginatedGroupedData : paginatedData).length === 0" class="py-12 text-center text-gray-400 text-sm">
         Nenhum registro encontrado.
@@ -782,10 +1038,10 @@ function goToPage(p) {
           @change="currentPage = 1"
           class="rounded-lg border border-gray-200 bg-white pl-2.5 pr-7 py-1.5 text-xs font-semibold text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 cursor-pointer"
         >
-          <option :value="10">10</option>
           <option :value="25">25</option>
           <option :value="50">50</option>
           <option :value="100">100</option>
+          <option :value="200">200</option>
         </select>
         <span>por página</span>
       </div>
@@ -834,3 +1090,69 @@ function goToPage(p) {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Container da grid com scroll interno */
+.grid-table-container {
+  scrollbar-width: auto;
+}
+.grid-table-container::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.grid-table-container::-webkit-scrollbar-track {
+  background: #e5e7eb;
+}
+.grid-table-container::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+}
+.grid-table-container::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+.grid-table-container::-webkit-scrollbar-corner {
+  background: #e5e7eb;
+}
+/* Vertical arrows */
+.grid-table-container::-webkit-scrollbar-button:single-button:vertical:decrement {
+  display: block;
+  height: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M5 0l5 6H0z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb;
+}
+.grid-table-container::-webkit-scrollbar-button:single-button:vertical:decrement:hover {
+  background-color: #d1d5db;
+}
+.grid-table-container::-webkit-scrollbar-button:single-button:vertical:increment {
+  display: block;
+  height: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb;
+}
+.grid-table-container::-webkit-scrollbar-button:single-button:vertical:increment:hover {
+  background-color: #d1d5db;
+}
+/* Horizontal arrows */
+.grid-table-container::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  display: block;
+  width: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10'%3E%3Cpath d='M6 0v10L0 5z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb;
+}
+.grid-table-container::-webkit-scrollbar-button:single-button:horizontal:decrement:hover {
+  background-color: #d1d5db;
+}
+.grid-table-container::-webkit-scrollbar-button:single-button:horizontal:increment {
+  display: block;
+  width: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10'%3E%3Cpath d='M0 0v10l6-5z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb;
+}
+.grid-table-container::-webkit-scrollbar-button:single-button:horizontal:increment:hover {
+  background-color: #d1d5db;
+}
+/* Quebra mode: flex rows for aligned columns */
+.quebra-row {
+  display: flex;
+  min-width: fit-content;
+}
+.quebra-cell {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+</style>

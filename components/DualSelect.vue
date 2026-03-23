@@ -13,6 +13,8 @@ const emit = defineEmits(['update:modelValue'])
 
 const leftSelected = ref(new Set())
 const rightSelected = ref(new Set())
+const lastLeftIndex = ref(-1)
+const lastRightIndex = ref(-1)
 
 const selected = computed(() => {
   if (!props.modelValue) return new Set()
@@ -31,24 +33,46 @@ function emitUpdate(newSet) {
 }
 
 function clickLeft(value, event) {
+  const list = available.value
+  const idx = list.findIndex(o => o.value === value)
   const s = new Set(leftSelected.value)
-  if (event.ctrlKey || event.metaKey) {
+
+  if (event.shiftKey && lastLeftIndex.value >= 0) {
+    const from = Math.min(lastLeftIndex.value, idx)
+    const to = Math.max(lastLeftIndex.value, idx)
+    for (let i = from; i <= to; i++) {
+      s.add(list[i].value)
+    }
+  } else if (event.ctrlKey || event.metaKey) {
     if (s.has(value)) s.delete(value); else s.add(value)
   } else {
     s.clear()
     s.add(value)
   }
+
+  lastLeftIndex.value = idx
   leftSelected.value = s
 }
 
 function clickRight(value, event) {
+  const list = chosen.value
+  const idx = list.findIndex(o => o.value === value)
   const s = new Set(rightSelected.value)
-  if (event.ctrlKey || event.metaKey) {
+
+  if (event.shiftKey && lastRightIndex.value >= 0) {
+    const from = Math.min(lastRightIndex.value, idx)
+    const to = Math.max(lastRightIndex.value, idx)
+    for (let i = from; i <= to; i++) {
+      s.add(list[i].value)
+    }
+  } else if (event.ctrlKey || event.metaKey) {
     if (s.has(value)) s.delete(value); else s.add(value)
   } else {
     s.clear()
     s.add(value)
   }
+
+  lastRightIndex.value = idx
   rightSelected.value = s
 }
 
