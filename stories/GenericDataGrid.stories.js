@@ -173,7 +173,7 @@ export const SummaryDynamic = () => ({
       <div v-if="showPanel" class="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <p class="text-xs font-semibold text-gray-500 mb-2">Selecione os campos para agrupar:</p>
         <div class="flex flex-wrap gap-2">
-          <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggle(col.key)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors" :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'">
+          <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggle(col.key)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors" :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300'">
             {{ col.label }} <span v-if="selectedGroupBy.includes(col.key)" class="ml-0.5 text-blue-200 font-bold">{{ selectedGroupBy.indexOf(col.key) + 1 }}</span>
           </button>
         </div>
@@ -312,7 +312,7 @@ export const BreakdownDynamic = () => ({
       <div v-if="showPanel" class="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <p class="text-xs font-semibold text-gray-500 mb-2">Selecione os campos para agrupar:</p>
         <div class="flex flex-wrap gap-2">
-          <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggle(col.key)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors" :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'">
+          <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggle(col.key)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors" :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300'">
             {{ col.label }} <span v-if="selectedGroupBy.includes(col.key)" class="ml-0.5 text-blue-200 font-bold">{{ selectedGroupBy.indexOf(col.key) + 1 }}</span>
           </button>
         </div>
@@ -389,7 +389,7 @@ export const Complete = () => ({
           <button v-for="mode in [{ key: 'normal', label: 'Detalhado' }, { key: 'resumo', label: 'Resumo' }, { key: 'quebra', label: 'Quebra' }]"
             :key="mode.key" type="button" @click="setMode(mode.key)"
             class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all"
-            :class="gridMode === mode.key ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'">
+            :class="gridMode === mode.key ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-blue-700 hover:bg-blue-50'">
             {{ mode.label }}
           </button>
         </div>
@@ -411,7 +411,7 @@ export const Complete = () => ({
         <div class="flex flex-wrap gap-2">
           <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggleGroupColumn(col.key)"
             class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors"
-            :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600'">
+            :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300'">
             {{ col.label }}
             <span v-if="selectedGroupBy.includes(col.key)" class="ml-0.5 text-blue-200 font-bold">{{ selectedGroupBy.indexOf(col.key) + 1 }}</span>
           </button>
