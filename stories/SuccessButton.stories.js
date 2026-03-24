@@ -5,14 +5,10 @@ export default {
   component: SuccessButton,
   tags: ['autodocs'],
   argTypes: {
-    type: {
-      control: 'select',
-      options: ['button', 'submit', 'reset'],
-    },
-    default: {
-      control: 'text',
-      description: 'Button label (slot content)',
-    },
+    type: { control: 'select', options: ['button', 'submit', 'reset'] },
+    size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    variant: { control: 'select', options: ['solid', 'outline'] },
+    default: { control: 'text', description: 'Button label (slot content)' },
   },
 }
 
@@ -23,34 +19,33 @@ const Template = (args) => ({
 })
 
 export const Default = Template.bind({})
-Default.args = {
-  default: 'Confirmar',
-  type: 'button',
-}
+Default.args = { default: 'Salvar', type: 'button' }
 
-export const Disabled = () => ({
-  components: { SuccessButton },
-  template: `<SuccessButton disabled>Desativado</SuccessButton>`,
-})
-
-export const WithIcon = () => ({
-  components: { SuccessButton },
-  template: `
-    <SuccessButton>
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-      </svg>
-      Aprovado
-    </SuccessButton>
-  `,
-})
+export const Outline = Template.bind({})
+Outline.args = { default: 'Excel', variant: 'outline' }
 
 export const AllVariants = () => ({
   components: { SuccessButton },
   template: `
-    <div class="flex flex-wrap items-center gap-4">
-      <SuccessButton>Normal</SuccessButton>
-      <SuccessButton disabled>Desativado</SuccessButton>
+    <div class="space-y-6 p-4">
+      <div>
+        <p class="text-xs font-semibold text-gray-400 mb-2 uppercase">Solid (padrão)</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <SuccessButton size="sm">Pequeno</SuccessButton>
+          <SuccessButton>Normal</SuccessButton>
+          <SuccessButton size="lg">Grande</SuccessButton>
+          <SuccessButton disabled>Desativado</SuccessButton>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 mb-2 uppercase">Outline (contorno)</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <SuccessButton variant="outline" size="sm">Pequeno</SuccessButton>
+          <SuccessButton variant="outline">Excel</SuccessButton>
+          <SuccessButton variant="outline" size="lg">Grande</SuccessButton>
+          <SuccessButton variant="outline" disabled>Desativado</SuccessButton>
+        </div>
+      </div>
     </div>
   `,
 })

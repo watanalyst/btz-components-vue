@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import GenericDataGrid from '../components/GenericDataGrid.vue'
 import SecondaryButton from '../components/SecondaryButton.vue'
+import DangerButton from '../components/DangerButton.vue'
 
 export default {
   title: 'Data/GenericDataGrid',
@@ -137,7 +138,7 @@ export const SummaryFixed = () => ({
 // 3. SUMMARY DYNAMIC
 // ═══════════════════════════════════════════════
 export const SummaryDynamic = () => ({
-  components: { GenericDataGrid, SecondaryButton },
+  components: { GenericDataGrid, SecondaryButton, DangerButton },
   setup() {
     const groupableColumns = movDevColumns.filter(c => !['number', 'currency'].includes(c.type))
     const selectedGroupBy = ref([])
@@ -162,7 +163,7 @@ export const SummaryDynamic = () => ({
           Resumo
           <span v-if="selectedGroupBy.length" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{{ selectedGroupBy.length }}</span>
         </SecondaryButton>
-        <SecondaryButton v-if="selectedGroupBy.length || showPanel" size="sm" @click="selectedGroupBy = []; showPanel = false" class="!border-red-400 !text-red-600 hover:!bg-red-50 hover:!border-red-500">
+        <DangerButton v-if="selectedGroupBy.length || showPanel" variant="outline" size="sm" @click="selectedGroupBy = []; showPanel = false">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
           Limpar
         </SecondaryButton>
@@ -273,7 +274,7 @@ export const BreakdownFixed = () => ({
 // 5. BREAKDOWN DYNAMIC
 // ═══════════════════════════════════════════════
 export const BreakdownDynamic = () => ({
-  components: { GenericDataGrid, SecondaryButton },
+  components: { GenericDataGrid, SecondaryButton, DangerButton },
   setup() {
     const groupableColumns = movDevColumns.filter(c => !['number', 'currency'].includes(c.type))
     const selectedGroupBy = ref([])
@@ -298,7 +299,7 @@ export const BreakdownDynamic = () => ({
           Quebra
           <span v-if="selectedGroupBy.length" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{{ selectedGroupBy.length }}</span>
         </SecondaryButton>
-        <SecondaryButton v-if="selectedGroupBy.length || showPanel" size="sm" @click="selectedGroupBy = []; showPanel = false" class="!border-red-400 !text-red-600 hover:!bg-red-50 hover:!border-red-500">
+        <DangerButton v-if="selectedGroupBy.length || showPanel" variant="outline" size="sm" @click="selectedGroupBy = []; showPanel = false">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
           Limpar
         </SecondaryButton>
@@ -330,7 +331,7 @@ export const BreakdownDynamic = () => ({
 // 6. COMPLETA — Normal com botões dinâmicos
 // ═══════════════════════════════════════════════
 export const Complete = () => ({
-  components: { GenericDataGrid, SecondaryButton },
+  components: { GenericDataGrid, SecondaryButton, DangerButton },
   setup() {
     const groupableColumns = movDevColumns.filter(c => !['number', 'currency'].includes(c.type))
     const selectedGroupBy = ref([])
@@ -388,7 +389,7 @@ export const Complete = () => ({
           </SecondaryButton>
         </div>
 
-        <SecondaryButton v-if="selectedGroupBy.length || gridMode !== 'normal'" size="sm" @click="clearGrouping" class="!border-red-400 !text-red-600 hover:!bg-red-50 hover:!border-red-500">
+        <DangerButton v-if="selectedGroupBy.length || gridMode !== 'normal'" variant="outline" size="sm" @click="clearGrouping">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
           Limpar
         </SecondaryButton>

@@ -5,14 +5,9 @@ export default {
   component: SecondaryButton,
   tags: ['autodocs'],
   argTypes: {
-    type: {
-      control: 'select',
-      options: ['button', 'submit', 'reset'],
-    },
-    default: {
-      control: 'text',
-      description: 'Button label (slot content)',
-    },
+    type: { control: 'select', options: ['button', 'submit', 'reset'] },
+    size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    default: { control: 'text', description: 'Button label (slot content)' },
   },
 }
 
@@ -23,34 +18,21 @@ const Template = (args) => ({
 })
 
 export const Default = Template.bind({})
-Default.args = {
-  default: 'Cancelar',
-  type: 'button',
-}
+Default.args = { default: 'Cancelar', type: 'button' }
 
-export const Disabled = () => ({
-  components: { SecondaryButton },
-  template: `<SecondaryButton disabled>Desativado</SecondaryButton>`,
-})
-
-export const WithIcon = () => ({
+export const AllSizes = () => ({
   components: { SecondaryButton },
   template: `
-    <SecondaryButton>
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-      </svg>
-      Fechar
-    </SecondaryButton>
-  `,
-})
-
-export const AllVariants = () => ({
-  components: { SecondaryButton },
-  template: `
-    <div class="flex flex-wrap items-center gap-4">
-      <SecondaryButton>Normal</SecondaryButton>
-      <SecondaryButton disabled>Desativado</SecondaryButton>
+    <div class="space-y-6 p-4">
+      <div>
+        <p class="text-xs font-semibold text-gray-400 mb-2 uppercase">Tamanhos</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <SecondaryButton size="sm">Pequeno</SecondaryButton>
+          <SecondaryButton>Normal</SecondaryButton>
+          <SecondaryButton size="lg">Grande</SecondaryButton>
+          <SecondaryButton disabled>Desativado</SecondaryButton>
+        </div>
+      </div>
     </div>
   `,
 })

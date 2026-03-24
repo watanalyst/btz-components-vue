@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import SecondaryButton from './SecondaryButton.vue'
+import SuccessButton from './SuccessButton.vue'
 import {
   ArrowUpIcon,
   ArrowDownIcon,
@@ -983,10 +984,10 @@ function goToPage(p) {
           <span>Expandir</span>
         </SecondaryButton>
 
-        <SecondaryButton type="button" @click="exportExcel" class="!border-emerald-600 !text-emerald-600 hover:!bg-emerald-50 hover:!border-emerald-700 hover:!text-emerald-700">
+        <SuccessButton variant="outline" type="button" @click="exportExcel">
           <TableCellsIcon class="h-4 w-4" />
           <span>Excel</span>
-        </SecondaryButton>
+        </SuccessButton>
       </div>
     </div>
 
