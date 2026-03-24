@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
         </slot>
 
         <!-- Search -->
-        <div v-if="sidebarOpen" class="px-3 pt-2 pb-0">
+        <div v-if="sidebarOpen" class="px-[18px] pt-2 pb-0">
           <div class="relative flex items-center">
             <MagnifyingGlassIcon class="absolute left-2.5 h-3.5 w-3.5 text-gray-500/70 pointer-events-none" />
             <input
