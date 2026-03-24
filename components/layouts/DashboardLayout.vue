@@ -1,6 +1,7 @@
 <script setup>
-import { DocumentTextIcon, HomeIcon, FolderIcon } from '@heroicons/vue/24/outline'
+import { DocumentTextIcon, HomeIcon, FolderIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { Bars3Icon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/vue/24/solid'
+import TextInput from '../TextInput.vue'
 import { ref, computed, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
 
 const props = defineProps({
@@ -19,6 +20,34 @@ const emit = defineEmits(['logout'])
 const isSmallScreen = () => typeof window !== 'undefined' && window.innerWidth < 1024
 const sidebarOpen = ref(isSmallScreen() ? false : localStorage.getItem('sidebarOpen') !== 'false')
 const menuOpen = ref(false)
+const searchQuery = ref('')
+
+const filteredNavigation = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return props.navigation
+
+  return props.navigation
+    .map(section => {
+      const filteredItems = section.items
+        .map(item => {
+          if (item.children) {
+            const matchedChildren = item.children.filter(child =>
+              child.label.toLowerCase().includes(q)
+            )
+            if (matchedChildren.length) return { ...item, children: matchedChildren }
+            if (item.label.toLowerCase().includes(q)) return item
+            return null
+          }
+          return item.label.toLowerCase().includes(q) ? item : null
+        })
+        .filter(Boolean)
+
+      if (filteredItems.length) return { ...section, items: filteredItems }
+      if (section.title?.toLowerCase().includes(q)) return section
+      return null
+    })
+    .filter(Boolean)
+})
 
 const userInitials = computed(() => {
   const name = props.user?.name || ''
@@ -186,7 +215,7 @@ onBeforeUnmount(() => {
     <aside
       :class="[
         'fixed inset-y-0 left-0 z-40 flex flex-col pt-[2px] transition-all duration-300',
-        sidebarOpen ? 'w-[260px] overflow-hidden' : 'w-14 overflow-visible',
+        sidebarOpen ? 'w-[260px] overflow-x-hidden' : 'w-14 overflow-visible',
       ]"
     >
       <div class="flex flex-1 flex-col" style="background: linear-gradient(180deg, #071631 0%, #0A1E44 40%, #082040 100%)">
@@ -210,8 +239,21 @@ onBeforeUnmount(() => {
           </component>
         </slot>
 
+        <!-- Search -->
+        <div v-if="sidebarOpen" class="relative px-2.5 pt-3 pb-1">
+          <MagnifyingGlassIcon class="absolute left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500 pointer-events-none" />
+          <TextInput
+            v-model="searchQuery"
+            placeholder="Buscar..."
+            class="!bg-white/8 !border-white/10 !text-white !placeholder-gray-500 !text-xs !py-1.5 !pl-8 !pr-7 !rounded-md !shadow-none focus:!border-white/20 focus:!ring-white/10"
+          />
+          <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+            <XMarkIcon class="h-3.5 w-3.5" />
+          </button>
+        </div>
+
         <!-- Navigation -->
-        <nav class="relative flex-1 overflow-y-auto overflow-x-hidden py-4 scrollbar-thin" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
+        <nav class="relative flex-1 overflow-y-auto overflow-x-hidden py-4 scrollbar-thin" style="scrollbar-gutter:stable" :class="sidebarOpen ? 'pl-2.5 pr-1' : 'px-1'">
           <!-- Painel link (expanded) -->
           <component
             :is="linkComponent"
@@ -244,7 +286,7 @@ onBeforeUnmount(() => {
           </component>
 
           <!-- Sections -->
-          <div v-for="section in navigation" :key="section.key || section.title">
+          <div v-for="section in filteredNavigation" :key="section.key || section.title">
             <!-- Section header (expanded) — gradient button -->
             <button
               v-if="sidebarOpen"
@@ -285,7 +327,7 @@ onBeforeUnmount(() => {
             <!-- Section items -->
             <div
               class="grid transition-[grid-template-rows] duration-200 ease-out"
-              :style="{ gridTemplateRows: (!sidebarOpen || sectionExpanded[section.key || section.title]) ? '1fr' : '0fr' }"
+              :style="{ gridTemplateRows: (!sidebarOpen || sectionExpanded[section.key || section.title] || searchQuery.trim()) ? '1fr' : '0fr' }"
             >
               <div :class="sidebarOpen ? 'overflow-hidden' : ''">
                 <div :class="sidebarOpen ? 'space-y-0.5 mb-2' : 'space-y-1'">
@@ -332,7 +374,7 @@ onBeforeUnmount(() => {
                       <!-- Subgroup children -->
                       <div
                         class="grid transition-[grid-template-rows] duration-200 ease-out"
-                        :style="{ gridTemplateRows: (!sidebarOpen || subgroupExpanded[item.key || item.label]) ? '1fr' : '0fr' }"
+                        :style="{ gridTemplateRows: (!sidebarOpen || subgroupExpanded[item.key || item.label] || searchQuery.trim()) ? '1fr' : '0fr' }"
                       >
                         <div :class="sidebarOpen ? 'overflow-hidden' : ''">
                           <div :class="sidebarOpen ? 'space-y-0.5 ml-3' : 'space-y-1'">
