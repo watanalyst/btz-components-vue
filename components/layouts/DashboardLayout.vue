@@ -255,7 +255,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Navigation -->
-        <nav class="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-4 scrollbar-thin" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
+        <nav class="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-1.5 pb-4 scrollbar-thin" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
           <!-- Painel link (expanded) -->
           <component
             :is="linkComponent"
