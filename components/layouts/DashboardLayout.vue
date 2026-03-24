@@ -239,17 +239,19 @@ onBeforeUnmount(() => {
         </slot>
 
         <!-- Search -->
-        <div v-if="sidebarOpen" class="relative px-2.5 pt-3 pb-1">
-          <MagnifyingGlassIcon class="absolute left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500/70 pointer-events-none" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Buscar..."
-            class="sidebar-search"
-          />
-          <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-            <XMarkIcon class="h-3.5 w-3.5" />
-          </button>
+        <div v-if="sidebarOpen" class="px-2.5 pt-3 pb-1">
+          <div class="relative flex items-center">
+            <MagnifyingGlassIcon class="absolute left-2.5 h-3.5 w-3.5 text-gray-500/70 pointer-events-none" />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Buscar..."
+              class="sidebar-search"
+            />
+            <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-2.5 text-gray-500 hover:text-white transition-colors">
+              <XMarkIcon class="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
 
         <!-- Navigation -->
@@ -627,7 +629,7 @@ onBeforeUnmount(() => {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
-  padding: 7px 28px 7px 32px;
+  padding: 5px 28px 5px 30px;
   font-size: 12px;
   color: #fff;
   outline: none;
