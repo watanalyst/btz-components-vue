@@ -1,7 +1,6 @@
 <script setup>
 import { DocumentTextIcon, HomeIcon, FolderIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import { Bars3Icon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/vue/24/solid'
-import TextInput from '../TextInput.vue'
 import { ref, computed, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
 
 const props = defineProps({
@@ -218,7 +217,7 @@ onBeforeUnmount(() => {
         sidebarOpen ? 'w-[260px] overflow-x-hidden' : 'w-14 overflow-visible',
       ]"
     >
-      <div class="flex flex-1 flex-col" style="background: linear-gradient(180deg, #071631 0%, #0A1E44 40%, #082040 100%)">
+      <div class="flex flex-1 flex-col overflow-hidden" style="background: linear-gradient(180deg, #071631 0%, #0A1E44 40%, #082040 100%)">
         <!-- Glow overlay -->
         <div class="pointer-events-none absolute inset-0 opacity-30" style="background: radial-gradient(ellipse at 50% 0%, rgba(9,63,135,0.3) 0%, transparent 70%)" />
 
@@ -241,11 +240,12 @@ onBeforeUnmount(() => {
 
         <!-- Search -->
         <div v-if="sidebarOpen" class="relative px-2.5 pt-3 pb-1">
-          <MagnifyingGlassIcon class="absolute left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500 pointer-events-none" />
-          <TextInput
+          <MagnifyingGlassIcon class="absolute left-5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500/70 pointer-events-none" />
+          <input
             v-model="searchQuery"
+            type="text"
             placeholder="Buscar..."
-            class="!bg-white/8 !border-white/10 !text-white !placeholder-gray-500 !text-xs !py-1.5 !pl-8 !pr-7 !rounded-md !shadow-none focus:!border-white/20 focus:!ring-white/10"
+            class="sidebar-search"
           />
           <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
             <XMarkIcon class="h-3.5 w-3.5" />
@@ -253,7 +253,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Navigation -->
-        <nav class="relative flex-1 overflow-y-auto overflow-x-hidden py-4 scrollbar-thin" style="scrollbar-gutter:stable" :class="sidebarOpen ? 'pl-2.5 pr-1' : 'px-1'">
+        <nav class="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-4 scrollbar-thin" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
           <!-- Painel link (expanded) -->
           <component
             :is="linkComponent"
@@ -619,5 +619,26 @@ onBeforeUnmount(() => {
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: rgba(255,255,255,0.3);
+}
+
+/* Search input para sidebar escuro */
+.sidebar-search {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 7px 28px 7px 32px;
+  font-size: 12px;
+  color: #fff;
+  outline: none;
+  transition: all 0.2s;
+}
+.sidebar-search::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+.sidebar-search:focus {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.25);
+  box-shadow: 0 0 0 2px rgba(21,101,192,0.2);
 }
 </style>
