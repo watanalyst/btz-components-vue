@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import GenericDataGrid from '../components/GenericDataGrid.vue'
+import SecondaryButton from '../components/SecondaryButton.vue'
 
 export default {
   title: 'Data/GenericDataGrid',
@@ -136,7 +137,7 @@ export const SummaryFixed = () => ({
 // 3. SUMMARY DYNAMIC
 // ═══════════════════════════════════════════════
 export const SummaryDynamic = () => ({
-  components: { GenericDataGrid },
+  components: { GenericDataGrid, SecondaryButton },
   setup() {
     const groupableColumns = movDevColumns.filter(c => !['number', 'currency'].includes(c.type))
     const selectedGroupBy = ref([])
@@ -157,25 +158,22 @@ export const SummaryDynamic = () => ({
       <h2 class="text-lg font-bold text-gray-800 mb-1">Summary (dynamic)</h2>
       <p class="text-xs text-gray-400 mb-3">Choose grouping fields for summary mode.</p>
       <div class="mb-3 flex items-center gap-2">
-        <button type="button" @click="showPanel = !showPanel"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors"
-          :class="selectedGroupBy.length ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'">
+        <SecondaryButton size="sm" @click="showPanel = !showPanel" class="!border-blue-600 !text-blue-600 hover:!bg-blue-50">
           Resumo
-          <span v-if="selectedGroupBy.length" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-blue-600">{{ selectedGroupBy.length }}</span>
-        </button>
-        <button v-if="selectedGroupBy.length || showPanel" type="button" @click="selectedGroupBy = []; showPanel = false"
-          class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 transition-colors">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+          <span v-if="selectedGroupBy.length" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{{ selectedGroupBy.length }}</span>
+        </SecondaryButton>
+        <SecondaryButton v-if="selectedGroupBy.length || showPanel" size="sm" @click="selectedGroupBy = []; showPanel = false" class="!border-red-400 !text-red-600 hover:!bg-red-50 hover:!border-red-500">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
           Limpar
-        </button>
-        <span v-if="selectedGroupBy.length" class="text-xs text-gray-400">Resumo por: <span class="font-semibold text-gray-600">{{ selectedGroupBy.map(k => groupableColumns.find(c => c.key === k)?.label).join(' › ') }}</span></span>
+        </SecondaryButton>
       </div>
       <div v-if="showPanel" class="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <p class="text-xs font-semibold text-gray-500 mb-2">Selecione os campos para agrupar:</p>
         <div class="flex flex-wrap gap-2">
-          <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggle(col.key)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors" :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300'">
+          <SecondaryButton v-for="col in groupableColumns" :key="col.key" size="sm" @click="toggle(col.key)"
+            :class="selectedGroupBy.includes(col.key) ? '!bg-blue-600 !text-white !border-blue-600' : ''">
             {{ col.label }} <span v-if="selectedGroupBy.includes(col.key)" class="ml-0.5 text-blue-200 font-bold">{{ selectedGroupBy.indexOf(col.key) + 1 }}</span>
-          </button>
+          </SecondaryButton>
         </div>
         <div v-if="selectedGroupBy.length > 1" class="mt-3 flex items-center gap-2 text-xs">
           <span class="text-gray-400">Order:</span>
@@ -187,7 +185,7 @@ export const SummaryDynamic = () => ({
           </template>
         </div>
       </div>
-      <GenericDataGrid :columns="columns" :data="data" :page-size="100" export-filename="summary" :group-by="selectedGroupBy" :sum-columns="sumCols" max-height="70vh" />
+      <GenericDataGrid :columns="columns" :data="data" :page-size="100" export-filename="summary" :group-by="selectedGroupBy" :sum-columns="sumCols" :show-group-toggle="false" max-height="70vh" />
     </div>
   `,
 })
@@ -275,7 +273,7 @@ export const BreakdownFixed = () => ({
 // 5. BREAKDOWN DYNAMIC
 // ═══════════════════════════════════════════════
 export const BreakdownDynamic = () => ({
-  components: { GenericDataGrid },
+  components: { GenericDataGrid, SecondaryButton },
   setup() {
     const groupableColumns = movDevColumns.filter(c => !['number', 'currency'].includes(c.type))
     const selectedGroupBy = ref([])
@@ -296,25 +294,22 @@ export const BreakdownDynamic = () => ({
       <h2 class="text-lg font-bold text-gray-800 mb-1">Breakdown (dynamic)</h2>
       <p class="text-xs text-gray-400 mb-3">Choose grouping fields for breakdown mode.</p>
       <div class="mb-3 flex items-center gap-2">
-        <button type="button" @click="showPanel = !showPanel"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors"
-          :class="selectedGroupBy.length ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'">
+        <SecondaryButton size="sm" @click="showPanel = !showPanel" class="!border-blue-600 !text-blue-600 hover:!bg-blue-50">
           Quebra
-          <span v-if="selectedGroupBy.length" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-blue-600">{{ selectedGroupBy.length }}</span>
-        </button>
-        <button v-if="selectedGroupBy.length || showPanel" type="button" @click="selectedGroupBy = []; showPanel = false"
-          class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 transition-colors">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+          <span v-if="selectedGroupBy.length" class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">{{ selectedGroupBy.length }}</span>
+        </SecondaryButton>
+        <SecondaryButton v-if="selectedGroupBy.length || showPanel" size="sm" @click="selectedGroupBy = []; showPanel = false" class="!border-red-400 !text-red-600 hover:!bg-red-50 hover:!border-red-500">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
           Limpar
-        </button>
-        <span v-if="selectedGroupBy.length" class="text-xs text-gray-400">Quebra por: <span class="font-semibold text-gray-600">{{ selectedGroupBy.map(k => groupableColumns.find(c => c.key === k)?.label).join(' › ') }}</span></span>
+        </SecondaryButton>
       </div>
       <div v-if="showPanel" class="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <p class="text-xs font-semibold text-gray-500 mb-2">Selecione os campos para agrupar:</p>
         <div class="flex flex-wrap gap-2">
-          <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggle(col.key)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors" :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300'">
+          <SecondaryButton v-for="col in groupableColumns" :key="col.key" size="sm" @click="toggle(col.key)"
+            :class="selectedGroupBy.includes(col.key) ? '!bg-blue-600 !text-white !border-blue-600' : ''">
             {{ col.label }} <span v-if="selectedGroupBy.includes(col.key)" class="ml-0.5 text-blue-200 font-bold">{{ selectedGroupBy.indexOf(col.key) + 1 }}</span>
-          </button>
+          </SecondaryButton>
         </div>
         <div v-if="selectedGroupBy.length > 1" class="mt-3 flex items-center gap-2 text-xs">
           <span class="text-gray-400">Order:</span>
@@ -326,7 +321,7 @@ export const BreakdownDynamic = () => ({
           </template>
         </div>
       </div>
-      <GenericDataGrid :columns="columns" :data="data" :page-size="100" export-filename="breakdown" :group-by="selectedGroupBy" :sum-columns="sumCols" group-mode="quebra" max-height="70vh" />
+      <GenericDataGrid :columns="columns" :data="data" :page-size="100" export-filename="breakdown" :group-by="selectedGroupBy" :sum-columns="sumCols" group-mode="quebra" :show-group-toggle="false" max-height="70vh" />
     </div>
   `,
 })
@@ -335,7 +330,7 @@ export const BreakdownDynamic = () => ({
 // 6. COMPLETA — Normal com botões dinâmicos
 // ═══════════════════════════════════════════════
 export const Complete = () => ({
-  components: { GenericDataGrid },
+  components: { GenericDataGrid, SecondaryButton },
   setup() {
     const groupableColumns = movDevColumns.filter(c => !['number', 'currency'].includes(c.type))
     const selectedGroupBy = ref([])
@@ -386,35 +381,28 @@ export const Complete = () => ({
       <div class="mb-3 flex items-center gap-3 flex-wrap">
         <!-- Mode selector -->
         <div class="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
-          <button v-for="mode in [{ key: 'normal', label: 'Detalhado' }, { key: 'resumo', label: 'Resumo' }, { key: 'quebra', label: 'Quebra' }]"
-            :key="mode.key" type="button" @click="setMode(mode.key)"
-            class="px-3 py-1.5 text-xs font-semibold rounded-md transition-all"
-            :class="gridMode === mode.key ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-blue-700 hover:bg-blue-50'">
+          <SecondaryButton v-for="mode in [{ key: 'normal', label: 'Detalhado' }, { key: 'resumo', label: 'Resumo' }, { key: 'quebra', label: 'Quebra' }]"
+            :key="mode.key" size="sm" @click="setMode(mode.key)"
+            :class="gridMode === mode.key ? '!bg-blue-600 !text-white !border-blue-600 !shadow-sm' : '!border-transparent !shadow-none'">
             {{ mode.label }}
-          </button>
+          </SecondaryButton>
         </div>
 
-        <button v-if="selectedGroupBy.length || gridMode !== 'normal'" type="button" @click="clearGrouping"
-          class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 transition-colors">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+        <SecondaryButton v-if="selectedGroupBy.length || gridMode !== 'normal'" size="sm" @click="clearGrouping" class="!border-red-400 !text-red-600 hover:!bg-red-50 hover:!border-red-500">
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
           Limpar
-        </button>
-
-        <span v-if="selectedGroupBy.length && gridMode !== 'normal'" class="text-xs text-gray-400">
-          {{ gridMode === 'quebra' ? 'Quebra' : 'Resumo' }} por: <span class="font-semibold text-gray-600">{{ selectedGroupBy.map(k => groupableColumns.find(c => c.key === k)?.label).join(' › ') }}</span>
-        </span>
+        </SecondaryButton>
       </div>
 
       <!-- Group fields panel -->
       <div v-if="showGroupPanel && gridMode !== 'normal'" class="mb-4 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <p class="text-xs font-semibold text-gray-500 mb-2">Selecione os campos para agrupar (clique para adicionar/remover):</p>
         <div class="flex flex-wrap gap-2">
-          <button v-for="col in groupableColumns" :key="col.key" type="button" @click="toggleGroupColumn(col.key)"
-            class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md border transition-colors"
-            :class="selectedGroupBy.includes(col.key) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300'">
+          <SecondaryButton v-for="col in groupableColumns" :key="col.key" size="sm" @click="toggleGroupColumn(col.key)"
+            :class="selectedGroupBy.includes(col.key) ? '!bg-blue-600 !text-white !border-blue-600' : ''">
             {{ col.label }}
             <span v-if="selectedGroupBy.includes(col.key)" class="ml-0.5 text-blue-200 font-bold">{{ selectedGroupBy.indexOf(col.key) + 1 }}</span>
-          </button>
+          </SecondaryButton>
         </div>
         <div v-if="selectedGroupBy.length > 1" class="mt-3 flex items-center gap-2">
           <span class="text-xs text-gray-400">Order:</span>
@@ -435,6 +423,7 @@ export const Complete = () => ({
         :group-by="activeGroupBy"
         :sum-columns="sumCols"
         :group-mode="activeGroupMode"
+        :show-group-toggle="false"
         max-height="70vh"
       />
     </div>

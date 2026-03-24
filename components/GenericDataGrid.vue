@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import SecondaryButton from './SecondaryButton.vue'
-import SuccessButton from './SuccessButton.vue'
 import {
   ArrowUpIcon,
   ArrowDownIcon,
@@ -20,6 +19,7 @@ const props = defineProps({
   groupBy: { type: Array, default: () => [] },
   sumColumns: { type: Array, default: () => [] },
   groupMode: { type: String, default: 'resumo' }, // 'resumo' ou 'quebra'
+  showGroupToggle: { type: Boolean, default: true },
   maxHeight: { type: String, default: '' },
 })
 
@@ -226,7 +226,7 @@ function openFullscreen() {
     cols.reduce((obj, col) => { obj[col.key] = row[col.key]; return obj }, {})
   ))
   const colsJson = JSON.stringify(cols.map(col => ({
-    key: col.key, label: col.label, type: col.type || 'text', align: col.align || '', sortable: !!col.sortable
+    key: col.key, label: col.label, type: col.type || 'text', align: col.align || '', sortable: !!col.sortable, width: col.width || ''
   })))
   const groupByJson = JSON.stringify(props.groupBy)
   const sumColumnsJson = JSON.stringify(props.sumColumns)
@@ -239,7 +239,7 @@ function openFullscreen() {
 <title>${props.exportFilename} — Visualização expandida</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#374151;padding:16px;background:#f3f4f6;overflow:auto;scrollbar-width:auto}
+  body{font-family:Inter,system-ui,sans-serif;font-size:12px;color:#374151;padding:16px;background:#f3f4f6;overflow-x:hidden;overflow-y:auto;scrollbar-width:auto}
   body::-webkit-scrollbar{width:12px;height:12px}
   body::-webkit-scrollbar-track{background:#e5e7eb}
   body::-webkit-scrollbar-thumb{background:#9ca3af}
@@ -253,17 +253,21 @@ function openFullscreen() {
   body::-webkit-scrollbar-button:single-button:horizontal:decrement:hover{background-color:#d1d5db}
   body::-webkit-scrollbar-button:single-button:horizontal:increment{display:block;width:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='10'%3E%3Cpath d='M0 0v10l6-5z' fill='%23666'/%3E%3C/svg%3E") no-repeat center center #e5e7eb}
   body::-webkit-scrollbar-button:single-button:horizontal:increment:hover{background-color:#d1d5db}
-  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:10;background:#f3f4f6;padding-bottom:8px}
   .toolbar .left{font-size:13px;color:#6b7280}
   .toolbar .left b{color:#111827;font-weight:600}
   .toolbar .right{display:flex;align-items:center;gap:8px}
   .btn{padding:6px 14px;font-size:12px;font-weight:600;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;cursor:pointer;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
-  .btn:hover{background:#f0f5ff;border-color:#93c5fd;color:#1d4ed8;box-shadow:0 3px 10px rgba(29,78,216,0.12)}
-  .btn-excel{background:linear-gradient(135deg,#047857 0%,#059669 100%);color:#fff;border-color:#047857;font-weight:600;box-shadow:0 4px 14px rgba(4,120,87,0.35)}
-  .btn-excel:hover{filter:brightness(1.1);box-shadow:0 4px 14px rgba(4,120,87,0.45)}
-  .btn-sair{background:linear-gradient(135deg,#DC2626 0%,#B91C1C 100%);color:#fff;border-color:#DC2626;font-weight:600;box-shadow:0 4px 14px rgba(220,38,38,0.35)}
-  .btn-sair:hover{transform:translateY(-1px);filter:brightness(1.1);box-shadow:0 4px 14px rgba(220,38,38,0.45)}
-  .table-wrap{overflow:visible;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+  .btn:hover{background:#f0f5ff;border-color:#93c5fd;color:#1d4ed8;box-shadow:0 3px 10px rgba(29,78,216,0.12);transform:translateY(-1px)}
+  .btn-excel{background:#fff;color:#047857;border-color:#047857;font-weight:600}
+  .btn-excel:hover{background:#ecfdf5;border-color:#059669;color:#059669;box-shadow:0 3px 10px rgba(4,120,87,0.15);transform:translateY(-1px)}
+  .btn-sair{background:#fff;color:#DC2626;border-color:#DC2626;font-weight:600}
+  .btn-sair:hover{background:#fef2f2;border-color:#B91C1C;color:#B91C1C;box-shadow:0 3px 10px rgba(220,38,38,0.15);transform:translateY(-1px)}
+  .mode-toggle{display:inline-flex;border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:2px;gap:2px}
+  .mode-btn{padding:4px 12px;font-size:12px;font-weight:600;border:none;border-radius:6px;background:transparent;color:#6b7280;cursor:pointer;transition:all .15s}
+  .mode-btn:hover:not(.mode-active){background:#f3f4f6;color:#374151}
+  .mode-active{background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%);color:#fff;box-shadow:0 1px 3px rgba(9,63,135,0.3)}
+  .table-wrap{overflow-x:auto;overflow-y:visible;border-radius:12px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
   .table-wrap thead{position:sticky;top:0;z-index:1}
   .table-wrap::-webkit-scrollbar{width:12px;height:12px}
   .table-wrap::-webkit-scrollbar-track{background:#e5e7eb}
@@ -297,16 +301,26 @@ function openFullscreen() {
   .pg-btn:hover:not(:disabled):not(.active){background:#f3f4f6;color:#1f2937}
   .pg-btn.active{background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%);color:#fff;box-shadow:0 1px 3px rgba(9,63,135,0.3)}
   .pg-btn:disabled{opacity:.35;cursor:default}
+  .group-hdr{cursor:pointer;padding:8px 12px;font-weight:600;font-size:12px;color:#475569;background:#fff;border-top:1px solid #e2e8f0;display:flex;align-items:center;gap:4px;transition:background .15s}
+  .group-hdr:hover{background:#f1f5f9}
+  .chevron{width:14px;height:14px;color:#94a3b8;flex-shrink:0;transition:transform .2s}
+  .chevron-open{transform:rotate(90deg)}
+  .quebra-row{display:flex;min-width:fit-content}
+  .quebra-cell{flex:0 0 auto;box-sizing:border-box;min-width:100px}
+  .quebra-data-row{transition:background .15s}
+  .quebra-data-row:hover{background:#bfdbfe !important}
   @media print{.toolbar,.pagination{display:none}body{padding:0;background:#fff}.table-wrap{border:none;box-shadow:none;border-radius:0}}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"><\/script>
 </head>
 <body>
 <div class="toolbar">
-  <span class="left"><b id="countDisplay">0</b> registro(s)</span>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <b id="countDisplay" style="font-size:13px;color:#111827">0</b><span style="font-size:13px;color:#6b7280">registro(s)</span>
+    <div id="modeToggle" class="mode-toggle" style="display:none"></div>
+  </div>
   <div class="right">
     <button class="btn btn-excel" onclick="exportExcel()">Excel</button>
-    <button class="btn" onclick="window.print()">Imprimir</button>
     <button class="btn btn-sair" onclick="window.close()">Sair</button>
   </div>
 </div>
@@ -352,6 +366,13 @@ function getAlign(col){
   if(col.align)return 'text-align:'+col.align;
   return(col.type==='number'||col.type==='currency')?'text-align:right':'text-align:left';
 }
+function quebraColW(col){
+  if(col.width)return col.width;
+  if(col.type==='currency')return '120px';
+  if(col.type==='number')return '80px';
+  if(col.type==='date')return '110px';
+  return '100px';
+}
 function toggleSort(key){
   var col=COLS.find(function(c){return c.key===key});
   if(!col||!col.sortable)return;
@@ -387,11 +408,22 @@ function buildGroupedRows(data){
   var lvlSums=[];for(var i=0;i<levels;i++){var s={};SUM_COLS.forEach(function(k){s[k]=0});lvlSums.push(s)}
   var lvlVals=[];for(var i=0;i<levels;i++)lvlVals.push({});
   var grand={};SUM_COLS.forEach(function(k){grand[k]=0});
+  function makeAncestorIds(row){
+    var ids=[];
+    for(var lv=0;lv<levels;lv++){
+      var parts=[];for(var j=0;j<=lv;j++)parts.push(row[GROUP_BY[j]]||'');
+      ids.push(parts.join('|'));
+    }return ids;
+  }
   function emitSub(from){
     for(var lv=levels-1;lv>=from;lv--){
       if(curKeys[lv]!==null){
         var gv={};for(var j=0;j<=lv;j++)Object.assign(gv,lvlVals[j]);
-        rows.push({_type:'subtotal',_level:lv,_groupKeys:GROUP_BY.slice(0,lv+1),_groupValues:gv,_sums:Object.assign({},lvlSums[lv])});
+        var aIds=[];for(var j=0;j<=lv;j++){
+          var parts=[];for(var x=0;x<=j;x++)parts.push(gv[GROUP_BY[x]]||curKeys[x]||'');
+          aIds.push(parts.join('|'));
+        }
+        rows.push({_type:'subtotal',_level:lv,_groupKeys:GROUP_BY.slice(0,lv+1),_groupValues:gv,_sums:Object.assign({},lvlSums[lv]),_ancestorIds:aIds});
       }
     }
   }
@@ -408,12 +440,14 @@ function buildGroupedRows(data){
       }
       if(GROUP_MODE==='quebra'){
         for(var lv=changed;lv<levels;lv++){
-          rows.push({_type:'group_header',_level:lv,_key:GROUP_BY[lv],_label:row[GROUP_BY[lv]]});
+          var gId=GROUP_BY.slice(0,lv+1).map(function(k){return row[k]||''}).join('|');
+          var pId=lv>0?GROUP_BY.slice(0,lv).map(function(k){return row[k]||''}).join('|'):null;
+          rows.push({_type:'group_header',_level:lv,_key:GROUP_BY[lv],_label:row[GROUP_BY[lv]],_groupId:gId,_parentId:pId});
         }
-        rows.push({_type:'column_header'});
+        rows.push({_type:'column_header',_ancestorIds:makeAncestorIds(row)});
       }
     }
-    rows.push({_type:'data',_first:first,_row:row});
+    rows.push({_type:'data',_first:first,_row:row,_ancestorIds:makeAncestorIds(row)});
     SUM_COLS.forEach(function(k){
       var v=parseFloat(row[k])||0;
       for(var lv=0;lv<levels;lv++)lvlSums[lv][k]+=v;
@@ -424,10 +458,37 @@ function buildGroupedRows(data){
   rows.push({_type:'grand_total',_sums:grand});
   return rows;
 }
+function switchMode(mode){
+  GROUP_MODE=mode;
+  collapsedGroups={};
+  renderHead();render();renderModeToggle();
+}
+function renderModeToggle(){
+  var el=document.getElementById('modeToggle');
+  if(!GROUP_BY.length){el.style.display='none';return}
+  el.style.display='inline-flex';
+  var modes=[{key:'normal',label:'Detalhado'},{key:'resumo',label:'Resumo'},{key:'quebra',label:'Quebra'}];
+  el.innerHTML=modes.map(function(m){
+    var cls='mode-btn'+(GROUP_MODE===m.key?' mode-active':'');
+    return '<button class="'+cls+'" onclick="switchMode(&quot;'+m.key+'&quot;)">'+m.label+'</button>';
+  }).join('');
+}
+var collapsedGroups={};
+function toggleCollapse(groupId){
+  if(collapsedGroups[groupId])delete collapsedGroups[groupId];
+  else collapsedGroups[groupId]=true;
+  var grouped=buildGroupedRows(DATA);
+  if(grouped)renderGrouped(grouped);
+}
+function isAncestorCollapsed(ancestorIds){
+  if(!ancestorIds)return false;
+  for(var i=0;i<ancestorIds.length;i++){if(collapsedGroups[ancestorIds[i]])return true;}
+  return false;
+}
 function renderHead(){
   if(GROUP_MODE==='quebra'&&GROUP_BY.length){document.getElementById('tableHead').innerHTML='';return}
   document.getElementById('tableHead').innerHTML=COLS.map(function(c){
-    var cls=c.sortable?' class="sortable" onclick="toggleSort(\\''+c.key+'\\')"':'';
+    var cls=c.sortable?' class="sortable" onclick="toggleSort(&quot;'+c.key+'&quot;)"':'';
     var arrow='';
     var svgUp='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 19.5v-15m0 0l-6.75 6.75M12 4.5l6.75 6.75"/></svg>';
     var svgDown='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 4.5v15m0 0l6.75-6.75M12 19.5l-6.75-6.75"/></svg>';
@@ -445,6 +506,8 @@ function render(){
   if(grouped){
     renderGrouped(grouped);
   } else {
+    document.querySelector('.table-wrap table').style.display='';
+    var qc=document.getElementById('quebraContainer');if(qc)qc.innerHTML='';
     var start=pageSize>0?(currentPage-1)*pageSize:0;
     var end=pageSize>0?Math.min(start+pageSize,total):total;
     var slice=DATA.slice(start,end);
@@ -456,23 +519,91 @@ function render(){
   renderPagination(total);
 }
 function renderGrouped(rows){
-  var html='';
   var isQuebra=GROUP_MODE==='quebra';
+  if(isQuebra){
+    /* Quebra mode: render outside table using flex divs like main component */
+    document.querySelector('.table-wrap table').style.display='none';
+    var container=document.getElementById('quebraContainer');
+    if(!container){container=document.createElement('div');container.id='quebraContainer';document.querySelector('.table-wrap').appendChild(container)}
+    var html='';
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i];
+      if(r._type==='group_header'){
+        /* Hide if any ancestor group is collapsed (not just direct parent) */
+        if(r._groupId){
+          var parts=r._groupId.split('|');
+          var hidden=false;
+          for(var ai=1;ai<parts.length;ai++){
+            var ancestorId=parts.slice(0,ai).join('|');
+            if(collapsedGroups[ancestorId]){hidden=true;break}
+          }
+          if(hidden)continue;
+        }
+        var col=COLS.find(function(c){return c.key===r._key});
+        var label=col?col.label:r._key;
+        var val=col?formatCell(r._label,col):r._label;
+        var isCol=collapsedGroups[r._groupId];
+        var chevronCls=isCol?'chevron':'chevron chevron-open';
+        html+='<div class="group-hdr" style="padding-left:'+(r._level*24+12)+'px" onclick="toggleCollapse(&quot;'+r._groupId.replace(/"/g,'&amp;quot;')+'&quot;)">';
+        html+='<svg class="'+chevronCls+'" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>';
+        html+='<span style="color:#94a3b8">'+label+':</span> <span style="color:#1e293b;margin-left:4px">'+val+'</span></div>';
+      } else if(r._type==='column_header'){
+        if(isAncestorCollapsed(r._ancestorIds))continue;
+        var indent=GROUP_BY.length*24+12;
+        html+='<div class="quebra-row" style="margin-left:'+indent+'px;background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%)">';
+        html+=COLS.map(function(c){var w=quebraColW(c);return '<div class="quebra-cell" style="'+getAlign(c)+';width:'+w+';min-width:'+w+';color:#fff;padding:8px 12px;white-space:nowrap;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em">'+c.label+'</div>'}).join('');
+        html+='</div>';
+      } else if(r._type==='data'){
+        if(isAncestorCollapsed(r._ancestorIds))continue;
+        var bg=i%2===0?'#fff':'#edf2f7';
+        var row=r._row;var indent=GROUP_BY.length*24+12;
+        html+='<div class="quebra-row quebra-data-row" style="margin-left:'+indent+'px;background:'+bg+'">';
+        html+=COLS.map(function(c){var w=quebraColW(c);return '<div class="quebra-cell" style="'+getAlign(c)+';width:'+w+';min-width:'+w+';padding:8px 12px;white-space:nowrap;font-size:12px;color:#374151">'+formatCell(row[c.key],c)+'</div>'}).join('');
+        html+='</div>';
+      } else if(r._type==='subtotal'){
+        if(isAncestorCollapsed(r._ancestorIds))continue;
+        var lvl=r._level,maxLvl=GROUP_BY.length-1;
+        var bg,color;
+        if(lvl===0){bg='rgba(37,99,235,0.9)';color='#fff'}
+        else if(lvl===1){bg='rgba(191,219,254,0.8)';color='#111827'}
+        else{bg='#eff6ff';color='#374151'}
+        var indent=GROUP_BY.length*24+12;
+        html+='<div class="quebra-row" style="margin-left:'+indent+'px;background:'+bg+';color:'+color+';font-weight:600;border-top:1px solid rgba(59,130,246,0.3)">';
+        html+=COLS.map(function(c,ci){
+          var val='';var w=quebraColW(c);
+          if(ci===0){val=(lvl===maxLvl?'Subtotal':'Total')+' '+(COLS.find(function(x){return x.key===r._groupKeys[lvl]})||{}).label}
+          else if(SUM_COLS.indexOf(c.key)>=0){val=formatCell(r._sums[c.key],c)}
+          return '<div class="quebra-cell" style="'+getAlign(c)+';width:'+w+';min-width:'+w+';padding:8px 12px;white-space:nowrap">'+val+'</div>';
+        }).join('');
+        html+='</div>';
+      } else if(r._type==='grand_total'){
+        var indent=GROUP_BY.length*24+12;
+        html+='<div class="quebra-row" style="margin-left:'+indent+'px;background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%);color:#fff;font-weight:700;margin-top:4px">';
+        html+=COLS.map(function(c,ci){
+          var val='';var w=quebraColW(c);
+          if(ci===0)val='TOTAL GERAL';
+          else if(SUM_COLS.indexOf(c.key)>=0)val=formatCell(r._sums[c.key],c);
+          return '<div class="quebra-cell" style="'+getAlign(c)+';width:'+w+';min-width:'+w+';padding:8px 12px;white-space:nowrap">'+val+'</div>';
+        }).join('');
+        html+='</div>';
+      }
+    }
+    container.innerHTML=html;
+    return;
+  }
+  /* Resumo mode: render inside table */
+  document.querySelector('.table-wrap table').style.display='';
+  var qc=document.getElementById('quebraContainer');if(qc)qc.innerHTML='';
+  var html='';
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
-    if(r._type==='group_header'){
-      var col=COLS.find(function(c){return c.key===r._key});
-      var label=col?col.label:r._key;
-      var val=col?formatCell(r._label,col):r._label;
-      html+='<tr><td colspan="'+COLS.length+'" style="padding:8px 12px;padding-left:'+(r._level*24+12)+'px;font-weight:600;font-size:12px;color:#475569;background:#fff;border-top:1px solid #e2e8f0"><span style="color:#94a3b8">'+label+':</span> <span style="color:#1e293b">'+val+'</span></td></tr>';
-    } else if(r._type==='column_header'){
-      html+='<tr style="background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%);color:#fff">'+COLS.map(function(c){return '<th style="padding:8px 12px;white-space:nowrap;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;'+getAlign(c)+'">'+c.label+'</th>'}).join('')+'</tr>';
-    } else if(r._type==='data'){
+    if(r._type==='data'){
       var bg=i%2===0?'#fff':'#edf2f7';
       var row=r._row;
-      html+='<tr style="background:'+bg+'">'+COLS.map(function(c){
+      var borderCls=r._first?'border-top:2px solid #bfdbfe;':'';
+      html+='<tr style="background:'+bg+';'+borderCls+'">'+COLS.map(function(c){
         var val=formatCell(row[c.key],c);
-        if(!isQuebra&&GROUP_BY.indexOf(c.key)>=0){
+        if(GROUP_BY.indexOf(c.key)>=0){
           if(r._first){val='<span style="color:#1d4ed8;font-weight:600">'+val+'</span>'}
           else{val='<span style="color:transparent">'+val+'</span>'}
         }
@@ -480,20 +611,23 @@ function renderGrouped(rows){
       }).join('')+'</tr>';
     } else if(r._type==='subtotal'){
       var lvl=r._level,maxLvl=GROUP_BY.length-1;
-      var bg,color;
-      if(lvl===0){bg='rgba(37,99,235,0.9)';color='#fff'}
-      else if(lvl===1){bg='rgba(191,219,254,0.8)';color='#111827'}
-      else{bg='#eff6ff';color='#374151'}
-      html+='<tr style="background:'+bg+';color:'+color+';font-weight:600;border-top:1px solid rgba(59,130,246,0.3)">';
+      var bg,color,border;
+      if(lvl===0){bg='rgba(37,99,235,0.9)';color='#fff';border='border-top:1px solid #1d4ed8'}
+      else if(lvl===1){bg='rgba(191,219,254,0.8)';color='#111827';border='border-top:1px solid #93c5fd'}
+      else{bg='#eff6ff';color='#374151';border='border-top:1px solid #dbeafe'}
+      html+='<tr style="background:'+bg+';color:'+color+';font-weight:600;'+border+'">';
       html+=COLS.map(function(c,ci){
         var val='';
-        if(ci===0){val=(lvl===maxLvl?'Subtotal':'Total')+' '+(COLS.find(function(x){return x.key===r._groupKeys[lvl]})||{}).label}
+        if(r._groupKeys&&r._groupKeys.indexOf(c.key)>=0){
+          if(r._groupKeys[0]===c.key){val=formatCell(r._groupValues[c.key],c)+' Subtotal'}
+          else{val=formatCell(r._groupValues[c.key],c)}
+        }
         else if(SUM_COLS.indexOf(c.key)>=0){val=formatCell(r._sums[c.key],c)}
         return '<td style="'+getAlign(c)+'">'+val+'</td>';
       }).join('');
       html+='</tr>';
     } else if(r._type==='grand_total'){
-      html+='<tr style="background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%);color:#fff;font-weight:700">';
+      html+='<tr style="background:linear-gradient(180deg,#0B56B3 0%,#093F87 100%);color:#fff;font-weight:700;border-top:2px solid #093F87">';
       html+=COLS.map(function(c,ci){
         var val='';
         if(ci===0)val='TOTAL GERAL';
@@ -526,14 +660,17 @@ function exportExcel(){
   var wb=XLSX.utils.table_to_book(document.querySelector('table'),{sheet:'Dados'});
   XLSX.writeFile(wb,filename+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
-renderHead();render();
+try{renderModeToggle();renderHead();render()}catch(e){document.body.innerHTML='<pre style="color:red;padding:20px;font-size:14px">ERRO: '+e.message+'\\n\\n'+e.stack+'</pre>'}
 <\/script>
 </body>
 </html>`
 
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  window.open(url, '_blank')
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+  }
 }
 
 // Export Excel (requires xlsx to be available globally or installed)
@@ -836,7 +973,7 @@ function goToPage(p) {
           <span>Limpar</span>
         </SecondaryButton>
 
-        <SecondaryButton v-if="hasGrouping" type="button" @click="groupingActive = !groupingActive">
+        <SecondaryButton v-if="hasGrouping && showGroupToggle" type="button" @click="groupingActive = !groupingActive">
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /></svg>
           <span>{{ groupingActive ? 'Detalhado' : (groupMode === 'quebra' ? 'Quebra' : 'Resumo') }}</span>
         </SecondaryButton>
@@ -846,10 +983,10 @@ function goToPage(p) {
           <span>Expandir</span>
         </SecondaryButton>
 
-        <SuccessButton type="button" @click="exportExcel">
+        <SecondaryButton type="button" @click="exportExcel" class="!border-emerald-600 !text-emerald-600 hover:!bg-emerald-50 hover:!border-emerald-700 hover:!text-emerald-700">
           <TableCellsIcon class="h-4 w-4" />
           <span>Excel</span>
-        </SuccessButton>
+        </SecondaryButton>
       </div>
     </div>
 
