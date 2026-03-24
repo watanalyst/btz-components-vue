@@ -17,6 +17,11 @@ const props = defineProps({
   pageSize: { type: Number, default: 25 },
   exportFilename: { type: String, default: 'relatorio' },
   selectable: { type: Boolean, default: false },
+  expandable: { type: Boolean, default: false },
+  expandedRowId: { type: [String, Number, null], default: null },
+  rowKey: { type: String, default: 'id' },
+  showExcel: { type: Boolean, default: true },
+  showExpand: { type: Boolean, default: true },
   groupBy: { type: Array, default: () => [] },
   sumColumns: { type: Array, default: () => [] },
   groupMode: { type: String, default: 'resumo' }, // 'resumo' ou 'quebra'
@@ -24,7 +29,7 @@ const props = defineProps({
   maxHeight: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:selected'])
+const emit = defineEmits(['update:selected', 'row-expand'])
 
 // Highlight row on click
 const highlightedRow = ref(-1)
@@ -979,15 +984,17 @@ function goToPage(p) {
           <span>{{ groupingActive ? 'Detalhado' : (groupMode === 'quebra' ? 'Quebra' : 'Resumo') }}</span>
         </SecondaryButton>
 
-        <SecondaryButton type="button" @click="openFullscreen" :disabled="!sortedData.length">
+        <SecondaryButton v-if="showExpand" type="button" @click="openFullscreen" :disabled="!sortedData.length">
           <ArrowsPointingOutIcon class="h-4 w-4" />
           <span>Expandir</span>
         </SecondaryButton>
 
-        <SuccessButton variant="outline" type="button" @click="exportExcel">
+        <SuccessButton v-if="showExcel" variant="outline" type="button" @click="exportExcel">
           <TableCellsIcon class="h-4 w-4" />
           <span>Excel</span>
         </SuccessButton>
+
+        <slot name="toolbar-right" />
       </div>
     </div>
 
@@ -1042,41 +1049,50 @@ function goToPage(p) {
 
         <!-- Normal tbody -->
         <tbody v-if="!groupingActive || !groupedDisplayData" class="divide-y divide-gray-100/80">
-          <tr
-            v-for="(row, i) in paginatedData"
-            :key="i"
-            class="transition-colors duration-150"
-            :class="[
-              selectable && isRowSelected(i)
-                ? 'bg-blue-50/80 hover:bg-blue-200/60 ring-inset ring-1 ring-blue-200/50'
-                : highlightedRow === i
-                  ? 'bg-blue-100 ring-inset ring-1 ring-blue-300'
-                  : i % 2 === 0
-                    ? 'bg-white hover:bg-blue-200/70'
-                    : 'bg-slate-100/70 hover:bg-blue-200/70',
-              'cursor-pointer',
-            ]"
-            @click="selectable ? toggleRow(i) : (highlightedRow = highlightedRow === i ? -1 : i)"
-          >
-            <td v-if="selectable" class="px-3 py-2.5 text-center" @click.stop>
-              <input
-                type="checkbox"
-                :checked="isRowSelected(i)"
-                @change="toggleRow(i)"
-                class="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/50"
-              />
-            </td>
-            <td
-              v-for="col in columns"
-              :key="col.key"
-              class="px-3 py-2.5 whitespace-nowrap text-gray-700"
-              :class="cellAlign(col)"
+          <template v-for="(row, i) in paginatedData" :key="rowKey ? row[rowKey] : i">
+            <tr
+              class="transition-colors duration-150"
+              :class="[
+                selectable && isRowSelected(i)
+                  ? 'bg-blue-50/80 hover:bg-blue-200/60 ring-inset ring-1 ring-blue-200/50'
+                  : expandable && expandedRowId != null && row[rowKey] === expandedRowId
+                    ? 'bg-blue-50/80'
+                    : highlightedRow === i
+                      ? 'bg-blue-100 ring-inset ring-1 ring-blue-300'
+                      : i % 2 === 0
+                        ? 'bg-white hover:bg-blue-200/70'
+                        : 'bg-slate-100/70 hover:bg-blue-200/70',
+                'cursor-pointer',
+              ]"
+              :style="expandable && expandedRowId != null && row[rowKey] === expandedRowId ? 'box-shadow: inset 4px 0 0 0 #3b82f6' : ''"
+              @click="selectable ? toggleRow(i) : (highlightedRow = highlightedRow === i ? -1 : i)"
             >
-              <slot :name="'cell-' + col.key" :row="row" :value="row[col.key]" :col="col">
-                {{ formatCell(row[col.key], col) }}
-              </slot>
-            </td>
-          </tr>
+              <td v-if="selectable" class="px-3 py-2.5 text-center" @click.stop>
+                <input
+                  type="checkbox"
+                  :checked="isRowSelected(i)"
+                  @change="toggleRow(i)"
+                  class="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/50"
+                />
+              </td>
+              <td
+                v-for="col in columns"
+                :key="col.key"
+                class="px-3 py-2.5 whitespace-nowrap text-gray-700"
+                :class="cellAlign(col)"
+              >
+                <slot :name="'cell-' + col.key" :row="row" :value="row[col.key]" :col="col" :toggleExpand="() => emit('row-expand', expandedRowId === row[rowKey] ? null : row[rowKey])">
+                  {{ formatCell(row[col.key], col) }}
+                </slot>
+              </td>
+            </tr>
+            <!-- Expanded row -->
+            <tr v-if="expandable && expandedRowId != null && row[rowKey] === expandedRowId" style="box-shadow: inset 4px 0 0 0 #3b82f6">
+              <td :colspan="columns.length + (selectable ? 1 : 0)" class="px-4 py-3 bg-gray-50/80">
+                <slot name="expanded-row" :row="row" :close="() => emit('row-expand', null)" />
+              </td>
+            </tr>
+          </template>
         </tbody>
 
         <!-- Grouped tbody (resumo mode) -->

@@ -431,6 +431,153 @@ export const Complete = () => ({
   `,
 })
 
+// ── Dados Packing List (master-detail) ──
+const packingMasterColumns = [
+  { key: 'cod_empresa', label: 'Empresa', sortable: true, align: 'center' },
+  { key: 'processo', label: 'Processo', sortable: true, align: 'center' },
+  { key: 'ano', label: 'Ano', sortable: true, align: 'center' },
+  { key: 'embarque', label: 'Embarque', sortable: true, align: 'center' },
+  { key: 'num_pedido', label: 'Num Pedido', sortable: true, align: 'center' },
+  { key: 'cod_item', label: 'Cód Item', sortable: true, align: 'center' },
+  { key: 'acoes', label: 'Ações', sortable: false, filterable: false, align: 'center', width: '110px' },
+]
+
+const packingMasterData = [
+  { id: 1, cod_empresa: '28', processo: '6', ano: '2026', embarque: 'B', num_pedido: '34253', cod_item: 'EXP.0230I' },
+  { id: 2, cod_empresa: '01', processo: '59', ano: '2026', embarque: 'A', num_pedido: '284799', cod_item: 'EXP.0712J' },
+  { id: 3, cod_empresa: '01', processo: '59', ano: '2026', embarque: 'B', num_pedido: '284800', cod_item: 'EXP.0712J' },
+  { id: 4, cod_empresa: '01', processo: '52', ano: '2026', embarque: 'A', num_pedido: '284689', cod_item: 'EXP.0712J' },
+]
+
+const packingDetails = {
+  1: [
+    { id: 101, production_date: '2026-01-29', date_expiry: '2027-01-29', cartons: 149, net_weight: 1490, gross_weight: 0, lots: '', palete: '' },
+    { id: 102, production_date: '2026-01-30', date_expiry: '2027-01-30', cartons: 1795, net_weight: 17950, gross_weight: 0, lots: '', palete: '' },
+    { id: 103, production_date: '2026-02-02', date_expiry: '2027-02-02', cartons: 856, net_weight: 8560, gross_weight: 0, lots: '', palete: '' },
+  ],
+  2: [
+    { id: 201, production_date: '2026-02-10', date_expiry: '2027-02-10', cartons: 500, net_weight: 5000, gross_weight: 100, lots: 'L001', palete: 'P1' },
+  ],
+  3: [],
+  4: [
+    { id: 401, production_date: '2026-03-01', date_expiry: '2027-03-01', cartons: 200, net_weight: 2000, gross_weight: 50, lots: 'L010', palete: 'P3' },
+    { id: 402, production_date: '2026-03-05', date_expiry: '2027-03-05', cartons: 300, net_weight: 3000, gross_weight: 75, lots: 'L011', palete: 'P4' },
+  ],
+}
+
+export const Expandable = () => ({
+  components: { GenericDataGrid },
+  setup() {
+    const expandedId = ref(null)
+    const details = ref([])
+
+    function handleExpand(id) {
+      if (id === null) {
+        expandedId.value = null
+        details.value = []
+        return
+      }
+      expandedId.value = id
+      details.value = packingDetails[id] || []
+    }
+
+    function formatDate(val) {
+      if (!val) return ''
+      const [y, m, d] = val.substring(0, 10).split('-')
+      return `${d}/${m}/${y}`
+    }
+
+    return { columns: packingMasterColumns, data: packingMasterData, expandedId, details, handleExpand, formatDate }
+  },
+  template: `
+    <div class="p-4">
+      <h2 class="text-lg font-bold text-gray-800 mb-1">Expandable (Master-Detail)</h2>
+      <p class="text-xs text-gray-400 mb-3">Grid with expandable rows for master-detail pattern (e.g. Packing List).</p>
+
+      <GenericDataGrid
+        :columns="columns"
+        :data="data"
+        :page-size="25"
+        :show-excel="false"
+        :show-expand="false"
+        :expandable="true"
+        :expanded-row-id="expandedId"
+        row-key="id"
+        export-filename="packing-list"
+        @row-expand="handleExpand"
+      >
+        <template #toolbar-right>
+          <button class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-[0_4px_14px_0_rgba(9,63,135,0.35)] transition-all duration-200 hover:-translate-y-px hover:brightness-110" style="background: linear-gradient(135deg, #093F87 0%, #0B56B3 100%)">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            Novo
+          </button>
+        </template>
+
+        <template #cell-acoes="{ row, toggleExpand }">
+          <div class="flex items-center justify-center gap-1">
+            <button @click.stop="toggleExpand()" class="p-1.5 rounded-lg transition-colors" :class="expandedId === row.id ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'" title="Ver itens">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" /></svg>
+            </button>
+            <button class="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" title="Editar">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+            </button>
+            <button class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Excluir">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+            </button>
+          </div>
+        </template>
+
+        <template #expanded-row="{ row, close }">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-700">Itens do Packing List</h3>
+              <p class="text-xs text-gray-400 mt-0.5">Pedido {{ row.num_pedido }} · {{ row.cod_item }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white" style="background: linear-gradient(135deg, #093F87 0%, #0B56B3 100%)">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                Novo Item
+              </button>
+              <button @click="close" class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">Fechar</button>
+            </div>
+          </div>
+
+          <div v-if="details.length === 0" class="text-center py-4 text-sm text-gray-400">
+            Nenhum item cadastrado.
+          </div>
+
+          <div v-else class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+            <table class="min-w-full text-xs">
+              <thead>
+                <tr style="background: linear-gradient(180deg, #0B56B3 0%, #093F87 100%);" class="text-white">
+                  <th class="px-3 py-2 text-center text-[11px] uppercase tracking-wider font-semibold">Data Produção</th>
+                  <th class="px-3 py-2 text-center text-[11px] uppercase tracking-wider font-semibold">Data Expiração</th>
+                  <th class="px-3 py-2 text-right text-[11px] uppercase tracking-wider font-semibold">Caixas</th>
+                  <th class="px-3 py-2 text-right text-[11px] uppercase tracking-wider font-semibold">Peso Líquido</th>
+                  <th class="px-3 py-2 text-right text-[11px] uppercase tracking-wider font-semibold">Peso Bruto</th>
+                  <th class="px-3 py-2 text-left text-[11px] uppercase tracking-wider font-semibold">Lotes</th>
+                  <th class="px-3 py-2 text-left text-[11px] uppercase tracking-wider font-semibold">Palete</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100/80">
+                <tr v-for="(d, idx) in details" :key="d.id" :class="idx % 2 === 0 ? 'bg-white hover:bg-blue-100/50' : 'bg-slate-50/70 hover:bg-blue-100/50'">
+                  <td class="px-3 py-2 text-center">{{ formatDate(d.production_date) }}</td>
+                  <td class="px-3 py-2 text-center">{{ formatDate(d.date_expiry) }}</td>
+                  <td class="px-3 py-2 text-right">{{ Number(d.cartons).toLocaleString('pt-BR') }}</td>
+                  <td class="px-3 py-2 text-right">{{ Number(d.net_weight).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="px-3 py-2 text-right">{{ Number(d.gross_weight).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }}</td>
+                  <td class="px-3 py-2">{{ d.lots || '—' }}</td>
+                  <td class="px-3 py-2">{{ d.palete || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
+      </GenericDataGrid>
+    </div>
+  `,
+})
+
 export const Empty = () => ({
   components: { GenericDataGrid },
   setup() {
