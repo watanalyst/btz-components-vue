@@ -2,7 +2,7 @@ import RadioGroup from '../components/RadioGroup.vue'
 import { ref } from 'vue'
 
 export default {
-  title: 'Form/RadioGroup',
+  title: 'Inputs/RadioGroup (alias SegmentedControl)',
   component: RadioGroup,
   tags: ['autodocs'],
 }

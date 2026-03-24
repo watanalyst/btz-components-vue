@@ -2,7 +2,7 @@ import DualSelect from '../components/DualSelect.vue'
 import { ref } from 'vue'
 
 export default {
-  title: 'Form/DualSelect',
+  title: 'Inputs/DualSelect',
   component: DualSelect,
   tags: ['autodocs'],
 }

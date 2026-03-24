@@ -2,13 +2,15 @@ import { ref } from 'vue'
 import SegmentedControl from '../components/SegmentedControl.vue'
 
 export default {
-  title: 'Controls/SegmentedControl',
+  title: 'Inputs/SegmentedControl',
   component: SegmentedControl,
   tags: ['autodocs'],
   argTypes: {
-    modelValue: { control: 'text', description: 'Currently selected value (v-model)' },
-    options: { control: 'object', description: 'Object mapping value keys to display labels' },
-    name: { control: 'text', description: 'Name identifier for the control' },
+    modelValue: { control: 'text' },
+    options: { control: 'object' },
+    name: { control: 'text' },
+    size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    disabled: { control: 'boolean' },
   },
 }
 
@@ -20,9 +22,9 @@ export const Default = () => ({
     return { selected, options }
   },
   template: `
-    <div>
+    <div class="p-4">
       <SegmentedControl v-model="selected" :options="options" name="format" />
-      <p class="mt-3 text-sm text-gray-500">Selecionado: <strong>{{ selected }}</strong></p>
+      <p class="mt-3 text-xs text-gray-400">Selecionado: {{ selected }}</p>
     </div>
   `,
 })
@@ -30,19 +32,55 @@ export const Default = () => ({
 export const TwoOptions = () => ({
   components: { SegmentedControl },
   setup() {
-    const selected = ref('individual')
-    const options = { individual: 'Individual', agrupado: 'Agrupado' }
+    const selected = ref('sim')
+    const options = { sim: 'Sim', nao: 'Não' }
     return { selected, options }
   },
-  template: `<SegmentedControl v-model="selected" :options="options" name="mode" />`,
+  template: `
+    <div class="p-4">
+      <p class="text-sm font-medium text-gray-700 mb-2">Dados Banco</p>
+      <SegmentedControl v-model="selected" :options="options" name="banco" />
+    </div>
+  `,
 })
 
-export const ManyOptions = () => ({
+export const AllSizes = () => ({
   components: { SegmentedControl },
   setup() {
-    const selected = ref('dia')
-    const options = { dia: 'Dia', semana: 'Semana', mes: 'Mês', ano: 'Ano' }
+    const s1 = ref('a')
+    const s2 = ref('a')
+    const s3 = ref('a')
+    const options = { a: 'Detalhado', b: 'Resumo', c: 'Quebra' }
+    return { s1, s2, s3, options }
+  },
+  template: `
+    <div class="p-4 space-y-4">
+      <div>
+        <p class="text-xs font-semibold text-gray-400 mb-2 uppercase">Small</p>
+        <SegmentedControl v-model="s1" :options="options" name="s1" size="sm" />
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 mb-2 uppercase">Medium (padrão)</p>
+        <SegmentedControl v-model="s2" :options="options" name="s2" />
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 mb-2 uppercase">Large</p>
+        <SegmentedControl v-model="s3" :options="options" name="s3" size="lg" />
+      </div>
+    </div>
+  `,
+})
+
+export const Disabled = () => ({
+  components: { SegmentedControl },
+  setup() {
+    const selected = ref('sim')
+    const options = { sim: 'Sim', nao: 'Não' }
     return { selected, options }
   },
-  template: `<SegmentedControl v-model="selected" :options="options" name="period" />`,
+  template: `
+    <div class="p-4">
+      <SegmentedControl v-model="selected" :options="options" name="disabled" disabled />
+    </div>
+  `,
 })

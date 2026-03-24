@@ -1,7 +1,7 @@
 import InputLabel from '../components/InputLabel.vue'
 
 export default {
-  title: 'Form/InputLabel',
+  title: 'Inputs/InputLabel',
   component: InputLabel,
   tags: ['autodocs'],
   argTypes: {

@@ -1,7 +1,7 @@
 import InputError from '../components/InputError.vue'
 
 export default {
-  title: 'Form/InputError',
+  title: 'Inputs/InputError',
   component: InputError,
   tags: ['autodocs'],
   argTypes: {

@@ -5,7 +5,7 @@ import InputError from '../components/InputError.vue'
 import PrimaryButton from '../components/PrimaryButton.vue'
 
 export default {
-  title: 'Form/FormComposition',
+  title: 'Inputs/FormComposition',
   tags: ['autodocs'],
 }
 

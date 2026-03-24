@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import TextInput from '../components/TextInput.vue'
 
 export default {
-  title: 'Form/TextInput',
+  title: 'Inputs/TextInput',
   component: TextInput,
   tags: ['autodocs'],
   argTypes: {

@@ -2,7 +2,7 @@ import ComboboxInput from '../components/ComboboxInput.vue'
 import { ref } from 'vue'
 
 export default {
-  title: 'Form/ComboboxInput',
+  title: 'Inputs/ComboboxInput',
   component: ComboboxInput,
   tags: ['autodocs'],
 }
