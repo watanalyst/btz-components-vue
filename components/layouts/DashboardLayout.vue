@@ -211,7 +211,7 @@ onBeforeUnmount(() => {
         </slot>
 
         <!-- Navigation -->
-        <nav class="relative flex-1 py-4" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
+        <nav class="relative flex-1 overflow-y-auto overflow-x-hidden py-4 scrollbar-thin" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
           <!-- Painel link (expanded) -->
           <component
             :is="linkComponent"
@@ -558,5 +558,24 @@ onBeforeUnmount(() => {
 }
 .nav-child-active {
   background: linear-gradient(to right, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
+}
+
+/* Scrollbar fino para sidebar escuro */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.3);
 }
 </style>
