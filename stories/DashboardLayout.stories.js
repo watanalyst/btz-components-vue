@@ -77,6 +77,31 @@ const mockNavigationNested = [
           { label: 'Credit Note', href: '/relatorios/exportacao/credit-note' },
           { label: 'Debit Note', href: '/relatorios/exportacao/debit-note' },
           { label: 'Baixa Disponível', href: '/relatorios/exportacao/baixa-disponivel' },
+          { label: 'Banco Credit Note', href: '/relatorios/exportacao/banco-credit-note' },
+        ],
+      },
+    ],
+  },
+  {
+    key: 'administrativo',
+    title: 'Administrativo',
+    items: [
+      {
+        label: 'Fomento',
+        key: 'fomento',
+        children: [
+          { label: 'Mov. Dev. e Terceiros', href: '/relatorios/administrativo/mov-dev-terceiros' },
+          { label: 'Posição de Estoque', href: '/relatorios/administrativo/posicao-estoque' },
+          { label: 'Romaneio', href: '/relatorios/administrativo/romaneio' },
+        ],
+      },
+      {
+        label: 'Comercial',
+        key: 'comercial',
+        children: [
+          { label: 'Pedidos em Aberto', href: '/relatorios/administrativo/pedidos-aberto' },
+          { label: 'Faturamento', href: '/relatorios/administrativo/faturamento' },
+          { label: 'Carteira de Pedidos', href: '/relatorios/administrativo/carteira-pedidos' },
         ],
       },
     ],

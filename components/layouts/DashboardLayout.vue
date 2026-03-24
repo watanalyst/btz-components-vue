@@ -238,9 +238,10 @@ onBeforeUnmount(() => {
           </component>
         </slot>
 
-        <!-- Search -->
-        <div v-if="sidebarOpen" class="px-[18px] pt-2 pb-0">
-          <div class="relative flex items-center">
+        <!-- Navigation -->
+        <nav class="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-1.5 pb-4 scrollbar-thin" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
+          <!-- Search -->
+          <div v-if="sidebarOpen" class="relative flex items-center mb-1.5">
             <MagnifyingGlassIcon class="absolute left-2.5 h-3.5 w-3.5 text-gray-500/70 pointer-events-none" />
             <input
               v-model="searchQuery"
@@ -252,10 +253,7 @@ onBeforeUnmount(() => {
               <XMarkIcon class="h-3.5 w-3.5" />
             </button>
           </div>
-        </div>
 
-        <!-- Navigation -->
-        <nav class="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-1.5 pb-4 scrollbar-thin" :class="sidebarOpen ? 'px-2.5' : 'px-1'">
           <!-- Painel link (expanded) -->
           <component
             :is="linkComponent"
